@@ -21,6 +21,7 @@ class Simulation:
 
     def go(self):
         (self._options, self._args) = self._oparser.parse_args()
+        self._checkBaseParserOptions()
         self._checkParserOptions()
         self._setData()
 
@@ -68,6 +69,10 @@ class Simulation:
         self._oparser.add_option("-s", "--statsfile", action="store", dest="stats_file", default="aggregate", help="file for aggregate stats to be dumped")
         self._oparser.add_option("-m", "--poolsize", action="store", type="int", dest="pool_size", default=2, help="number of parallel computations to undertake")
         self._oparser.add_option("-q", "--quiet", action="store_true", dest="quiet", default=False, help="suppress standard output")
+
+    def _checkBaseParserOptions(self):
+        if not self._options.dup or self._options.dup <= 0:
+            self._oparser.error("Number of duplications must be positive")
 
     def _formatRun(self, result):
         return result
