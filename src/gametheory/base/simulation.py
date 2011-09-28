@@ -1,23 +1,25 @@
 __author__="gmcwhirt"
 __date__ ="$Sep 27, 2011 4:23:03 PM$"
 
-from abc import ABCMeta
-from abc import abstractmethod
+import cPickle
+import multiprocessing as mp
+
 from optparse import OptionParser
 
 effective_zero_diff = 1e-11
 effective_zero = 1e-10
 
 class Simulation:
-    __metaclass__ = ABCMeta
 
-    def __init__(self):
+    def __init__(self, runSimulation):
         self._oparser = OptionParser()
         self._options = None
         self._args = None
         self._data = {}
+        self._task_dup_num = False
         self._setBaseParserOptions()
         self._setParserOptions()
+        self._runSimulation = runSimulation
 
     def go(self):
         (self._options, self._args) = self._oparser.parse_args()
@@ -35,30 +37,36 @@ class Simulation:
 
         mp.log_to_stderr()
 
-        if not options.quiet:
+        if not self._options.quiet:
             print "Running {0} duplications.".format(self._options.dup)
 
         task_base = self._buildTask()
-        if self._options.file_dump:
-            tasks = [tuple(task_base + [output_base.format(self._options.output_file.format(i + 1)), self._options.skip]) for i in range(self._options.dup)]
-        else:
-            tasks = [tuple(task_base + [None, self._options.skip, self._options.quiet])] * self._options.dup
+        task_extras = [self._options.skip, self._options.quiet]
 
-        results = pool.imap_unordered(self.runSimulationIMap, tasks)
+        if self._task_dup_num and self._options.file_dump:
+            tasks = [tuple([i] + task_base + [output_base.format(self._options.output_file.format(i + 1))] + task_extras) for i in range(self._options.dup)]
+        elif self._task_dup_num:
+            tasks = [tuple([i] + task_base + [None] + task_extras) for i in range(self._options.dup)]
+        elif self._options.file_dump:
+            tasks = [tuple(task_base + [output_base.format(self._options.output_file.format(i + 1))] + task_extras) for i in range(self._options.dup)]
+        else:
+            tasks = [tuple(task_base + [None] + task_extras)] * self._options.dup
+
+        results = pool.imap_unordered(self._runSimulation, tasks)
         finished_count = 0
+        print >>stats, cPickle.dumps(self._options)
+        print >>stats
         for result in results:
             finished_count += 1
-            if not options.quiet:
-                print self._outputRun(result)
+            if not self._options.quiet:
+                print self._formatRun(result)
             print >>stats, cPickle.dumps(result)
             print >>stats
             stats.flush()
             print "done #{0}".format(finished_count)
 
         stats.close()
-
-    def runSimulationIMap(self, args):
-        return self.runSimulation(*args)
+        self._whenDone()
 
     def _setBaseParserOptions(self):
         self._oparser.add_option("-d", "--duplications", type="int", action="store", dest="dup", default=1, help="number of duplications")
@@ -86,13 +94,9 @@ class Simulation:
     def _setData(self):
         pass
 
-    @abstractmethod
     def _buildTask(self):
         return []
 
-    @abstractmethod
-    @classmethod
-    def runSimulation(cls):
+    def _whenDone(self):
         pass
-
 
