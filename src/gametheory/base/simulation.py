@@ -4,7 +4,7 @@ __date__ ="$Sep 27, 2011 4:23:03 PM$"
 import cPickle
 import multiprocessing as mp
 
-from contextlib import contextmanager
+#from contextlib import contextmanager
 from optparse import OptionParser
 
 effective_zero_diff = 1e-11
@@ -23,17 +23,17 @@ class Simulation:
         self._setParserOptions()
         self._runSimulation = runSimulation
 
-    @contextmanager
-    def __mpPool(self, size, quiet):
-        try:
-            pool = mp.Pool(size)
-            if not quiet:
-                print "Pool Started: {0}".format(pool)
-            yield pool
-        finally:
-            pool.close()
-            pool.terminate()
-            print "Terminated by Interrupt!"
+    #@contextmanager
+    #def __mpPool(self, size, quiet):
+    #    try:
+    #        pool = mp.Pool(size)
+    #        if not quiet:
+    #            print "Pool Started: {0}".format(pool)
+    #        yield pool
+    #    finally:
+    #        pool.close()
+    #        pool.terminate()
+    #        print "Terminated by Interrupt!"
 
 
     def go(self):
@@ -46,7 +46,11 @@ class Simulation:
 
         stats = open(output_base.format(self._options.stats_file), "wb")
 
-        with self.__mpPool(self._options.pool_size, self._options.quiet) as pool:
+        #with self.__mpPool(self._options.pool_size, self._options.quiet) as pool:
+        try:
+            pool = mp.Pool(self._options.pool_size)
+            if not self._options.quiet:
+                print "Pool Started: {0}".format(pool)
 
             mp.log_to_stderr()
 
@@ -77,6 +81,10 @@ class Simulation:
                 print >>stats
                 stats.flush()
                 print "done #{0}".format(finished_count)
+        finally:
+            pool.close()
+            pool.terminate()
+            print "Terminated Process Pool!"
 
         stats.close()
         self._whenDone()
