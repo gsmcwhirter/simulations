@@ -24,9 +24,11 @@ class Simulation:
         self._runSimulation = runSimulation
 
     @contextmanager
-    def __mpPool(self, size):
+    def __mpPool(self, size, quiet):
         try:
             pool = mp.Pool(size)
+            if not quiet:
+                print "Pool Started: {0}".format(pool)
             yield pool
         finally:
             pool.close()
@@ -44,10 +46,7 @@ class Simulation:
 
         stats = open(output_base.format(self._options.stats_file), "wb")
 
-        with self.__mpPool(self._options.pool_size) as pool:
-            #pool = mp.Pool(self._options.pool_size)
-            if not self._options.quiet:
-                print "Pool: {0}".format(pool)
+        with self.__mpPool(self._options.pool_size, self._options.quiet) as pool:
 
             mp.log_to_stderr()
 
