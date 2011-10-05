@@ -3,12 +3,13 @@ __date__ ="$Sep 27, 2011 4:23:03 PM$"
 
 import cPickle
 import multiprocessing as mp
-import sys
 
+from contextlib import contextmanager
 from optparse import OptionParser
 
 effective_zero_diff = 1e-11
 effective_zero = 1e-10
+
 
 class Simulation:
 
@@ -18,13 +19,24 @@ class Simulation:
         self._args = None
         self._data = {}
         self._task_dup_num = False
-        self._setBaseParserOptions()
+        self.__setBaseParserOptions()
         self._setParserOptions()
         self._runSimulation = runSimulation
 
+    @contextmanager
+    def __mpPool(self, size):
+        try:
+            pool = mp.Pool(size)
+            yield pool
+        finally:
+            pool.close()
+            pool.terminate()
+            print "Terminated by Interrupt!"
+
+
     def go(self):
         (self._options, self._args) = self._oparser.parse_args()
-        self._checkBaseParserOptions()
+        self.__checkBaseParserOptions()
         self._checkParserOptions()
         self._setData()
 
@@ -32,8 +44,8 @@ class Simulation:
 
         stats = open(output_base.format(self._options.stats_file), "wb")
 
-        try:
-            pool = mp.Pool(self._options.pool_size)
+        with self.__mpPool(self._options.pool_size) as pool:
+            #pool = mp.Pool(self._options.pool_size)
             if not self._options.quiet:
                 print "Pool: {0}".format(pool)
 
@@ -67,17 +79,10 @@ class Simulation:
                 stats.flush()
                 print "done #{0}".format(finished_count)
 
-            stats.close()
-            self._whenDone()
-        
-        except KeyboardInterrupt:
-            pool.close()
-            pool.terminate()
-            stats.close()
-            print "Terminated by KeyboardInterrupt!"
-            sys.exit(0)
+        stats.close()
+        self._whenDone()
 
-    def _setBaseParserOptions(self):
+    def __setBaseParserOptions(self):
         self._oparser.add_option("-d", "--duplications", type="int", action="store", dest="dup", default=1, help="number of duplications")
         self._oparser.add_option("-o", "--output", action="store", dest="output_dir", default="./output", help="directory to dump output files")
         self._oparser.add_option("-f", "--filename", action="store", dest="output_file", default="duplication_{0}", help="output file name template")
@@ -87,7 +92,7 @@ class Simulation:
         self._oparser.add_option("-m", "--poolsize", action="store", type="int", dest="pool_size", default=2, help="number of parallel computations to undertake")
         self._oparser.add_option("-q", "--quiet", action="store_true", dest="quiet", default=False, help="suppress standard output")
 
-    def _checkBaseParserOptions(self):
+    def __checkBaseParserOptions(self):
         if not self._options.dup or self._options.dup <= 0:
             self._oparser.error("Number of duplications must be positive")
 
