@@ -71,13 +71,13 @@ class Simulation:
         self._whenDone()
 
     def __setBaseParserOptions(self):
-        self._oparser.add_option("-d", "--duplications", type="int", action="store", dest="dup", default=1, help="number of duplications")
-        self._oparser.add_option("-o", "--output", action="store", dest="output_dir", default="./output", help="directory to dump output files")
-        self._oparser.add_option("-f", "--filename", action="store", dest="output_file", default="duplication_{0}", help="output file name template")
-        self._oparser.add_option("-g", "--nofiledump", action="store_false", dest="file_dump", default=True, help="do not output duplication files")
-        self._oparser.add_option("-k", "--skip", action="store", type="int", dest="skip", default=1, help="number of generations between dumping output -- 0 for only at the end")
-        self._oparser.add_option("-s", "--statsfile", action="store", dest="stats_file", default="aggregate", help="file for aggregate stats to be dumped")
-        self._oparser.add_option("-m", "--poolsize", action="store", type="int", dest="pool_size", default=2, help="number of parallel computations to undertake")
+        self._oparser.add_option("-N", "--duplications", type="int", action="store", dest="dup", default=1, help="number of duplications")
+        self._oparser.add_option("-O", "--output", action="store", dest="output_dir", default="./output", help="directory to dump output files")
+        self._oparser.add_option("-F", "--filename", action="store", dest="output_file", default="duplication_{0}", help="output file name template")
+        self._oparser.add_option("-D", "--nofiledump", action="store_false", dest="file_dump", default=True, help="do not output duplication files")
+        self._oparser.add_option("-K", "--skip", action="store", type="int", dest="skip", default=1, help="number of generations between dumping output -- 0 for only at the end")
+        self._oparser.add_option("-S", "--statsfile", action="store", dest="stats_file", default="aggregate", help="file for aggregate stats to be dumped")
+        self._oparser.add_option("-P", "--poolsize", action="store", type="int", dest="pool_size", default=2, help="number of parallel computations to undertake")
         self._oparser.add_option("-q", "--quiet", action="store_true", dest="quiet", default=False, help="suppress standard output")
 
     def __checkBaseParserOptions(self):
