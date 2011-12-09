@@ -1,0 +1,2 @@
+gametheory.base
+numpy>=1.5
