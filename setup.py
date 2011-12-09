@@ -11,6 +11,9 @@ setup (
     package_dir = {
         '': 'src',
     },
+    requires = [
+        "numpy >= 1.5"
+    ],
     author = 'Gregory McWhirter',
     author_email = 'gmcwhirt@uci.edu',
     description = 'Game theory simulations base package',
