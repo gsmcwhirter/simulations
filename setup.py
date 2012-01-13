@@ -13,7 +13,7 @@ setup (
     },
     author = 'Gregory McWhirter',
     author_email = 'gmcwhirt@uci.edu',
-    description = 'Game theory simulations base package',
+    description = 'Game theory simulations: base package',
     url = 'https://www.github.com/gsmcwhirter/gametheory',
     license = 'MIT'
 )
