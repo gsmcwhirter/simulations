@@ -13,7 +13,7 @@ setup (
     },
     author = 'Gregory McWhirter',
     author_email = 'gmcwhirt@uci.edu',
-    description = 'An evolutionary game theory simulation framework: The base package',
+    description = 'An evolutionary game theory simulation framework: the base package',
     url = 'https://www.github.com/gsmcwhirter/gametheory',
     license = 'MIT'
 )
