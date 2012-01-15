@@ -6,6 +6,7 @@ setup (
     name = 'gametheory.base',
     version = '0.1',
     packages = [
+	'gametheory',
         'gametheory.base'
     ],
     package_dir = {
