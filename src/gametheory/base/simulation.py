@@ -89,7 +89,7 @@ class SimulationBatch:
             print "done #{0}".format(finished_count)
 
         stats.close()
-        self._whenDone()
+        return self._whenDone()
 
     def _set_base_options(self):
         """ Set up the basic OptionParser options
@@ -167,41 +167,6 @@ class Simulation:
         self._outfile = outfile
         self._skip = skip
         self._quiet = quiet
-
-    def getData(self):
-        """ Retrieves the data object
-
-        """
-
-        return self._data
-
-    def getIteration(self):
-        """ Retrieves the iteration
-
-        """
-
-        return self._num
-
-    def getOutfile(self):
-        """ Retrieves the outfile name
-
-        """
-
-        return self._outfile
-
-    def getSkip(self):
-        """ Retrieves the skip value
-
-        """
-
-        return self._skip
-
-    def getQuiet(self):
-        """ Retrieves the quiet flag
-
-        """
-
-        return self._quiet
 
     def run(self):
         pass
