@@ -2,6 +2,8 @@ import gametheory.base.simulation as simulation
 
 from nose import with_setup
 
+sim = None
+
 def setup_sim():
     class TestSim(simulation.Simulation):
         def run(self):
@@ -14,6 +16,7 @@ def teardown_sim():
 
 @with_setup(setup_sim, teardown_sim)
 def test_simulation_init():
+    assert sim is not None
     assert sim.getData() == 1
     assert sim.getIteration() == 2
     assert sim.getOutfile() == 3
