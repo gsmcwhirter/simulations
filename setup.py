@@ -17,6 +17,8 @@ setup (
         'numpy>=1.5'
     ],
     dependency_links = ["https://www.ideafreemonoid.org/pip"],
+    test_suite = 'nose.collector',
+    tests_require = ['nose'],
     author = 'Gregory McWhirter',
     author_email = 'gmcwhirt@uci.edu',
     description = 'A framework for evolutionary game theory simulations',

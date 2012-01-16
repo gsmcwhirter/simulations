@@ -168,5 +168,40 @@ class Simulation:
         self._skip = skip
         self._quiet = quiet
 
+    def getData(self):
+        """ Retrieves the data object
+
+        """
+
+        return self._data
+
+    def getIteration(self):
+        """ Retrieves the iteration
+
+        """
+
+        return self._num
+
+    def getOutfile(self):
+        """ Retrieves the outfile name
+
+        """
+
+        return self._outfile
+
+    def getSkip(self):
+        """ Retrieves the skip value
+
+        """
+
+        return self._skip
+
+    def getQuiet(self):
+        """ Retrieves the quiet flag
+
+        """
+
+        return self._quiet
+
     def run(self):
         pass
