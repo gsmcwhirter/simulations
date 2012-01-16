@@ -1,5 +1,7 @@
 import gametheory.base.simulation as simulation
 
+from nose import with_setup
+
 def setup_sim():
     class TestSim(simulation.Simulation):
         def run(self):
