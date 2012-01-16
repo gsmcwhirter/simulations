@@ -20,6 +20,6 @@ def test_simulation_init():
     assert sim.getSkip() == 4
     assert sim.getQuiet() == 5
 
-@with_setup(setup, teardown)
+@with_setup(setup_sim, teardown_sim)
 def test_simulation_run():
     assert sim.run() == "runs"
