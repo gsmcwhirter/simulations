@@ -5,8 +5,7 @@ import os
 import random
 import string
 
-from nose.tools import assert_equal
-from nose.tools import assert_raises
+from nose.tools import eq_ as assert_equal
 from optparse import OptionParser
 
 def filename_generator(size=6, chars=string.ascii_uppercase + string.digits):
@@ -81,12 +80,6 @@ class TestSimulation:
         assert_equal(result, "runs")
         
         assert_equal(self.sim._out_opened, False)
-        
-        assert simulation.Simulation._run(self.sim) is None
-
-    def test_delegation_method(self):
-        self.sim.set_output_file(None)
-        assert_equal(simulation._run_simulation(self.sim), "runs")
 
 class TestSimulationBatch:
     
@@ -187,19 +180,4 @@ class TestSimulationBatch:
                 should_be += cPickle.dumps("runs") + "\n"
                 should_be += "\n"
             assert_equal(results_file.read(), should_be)
-    
-    def test_option_failure(self):
-        args = ["-N", "-6", "-P", "2", "-O", self.dir, "-S", "results.testout", "-Q", "-D", "--test"]
         
-        assert_raises(SystemExit, self.batch.go, args)
-        
-    def test_option_failure2(self):
-        args = ["-N", "6", "-P", "2", "-O", self.dir, "-S", "results.testout", "-Q", "-D"]
-        
-        assert_raises(SystemExit, self.batch.go, args)
-        
-    def test_dummies(self):
-        assert simulation.SimulationBatch._set_options(self.batch) is None
-        assert simulation.SimulationBatch._check_options(self.batch) is None
-        assert simulation.SimulationBatch._set_data(self.batch) is None
-        assert simulation.SimulationBatch._when_done(self.batch) is None
