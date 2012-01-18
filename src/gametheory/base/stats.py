@@ -96,7 +96,6 @@ class StatsParser:
         
         count = -1
         pickle = ""
-        run_options = None
         
         if self._options.verbose:
             print "Beginning processing of stats file..."
@@ -152,7 +151,7 @@ class StatsParser:
 
         """
 
-        if not self._options.stats_file || not os.path.isfile(self._options.stats_file):
+        if not self._options.stats_file or not os.path.isfile(self._options.stats_file):
             self._oparser.error("The stats file specified does not exist")
             
     def _set_options(self):

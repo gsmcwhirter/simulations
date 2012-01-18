@@ -37,7 +37,7 @@ class StatsParser(stats.StatsParser):
             self._results = []
             
         print >>out, result
-        self._results.push((count, result))
+        self._results.append((count, result))
     
     def _when_done(self):
         return "test"
@@ -45,7 +45,7 @@ class StatsParser(stats.StatsParser):
 class TestStatsParser:
     
     def setUp(self):
-        self.stats = stats.StatsParser()
+        self.stats = StatsParser()
         self.batch = simulation.SimulationBatch(Sim)
         self.dir = "/tmp/" + filename_generator(8)
         
@@ -85,7 +85,9 @@ class TestStatsParser:
         assert_raises(SystemExit, self.stats.go, args)
         
     def test_option_failure2(self):
-        with open(self.dir + os.sep + "results.testout")
+        with open(self.dir + os.sep + "results.testout", "w") as testfile:
+            print >>testfile, "test"
+            
         args = ["-F", self.dir + os.sep + "results.testout", "-V"]
         
         assert_raises(SystemExit, self.stats.go, args)
@@ -98,8 +100,8 @@ class TestStatsParser:
         assert stats.StatsParser._when_done(self.stats) is None
         
     def test_go(self):
-        bargs = ["-F",  "iter_{0}.testout", "-N", "4", "-P", "2", "-O", self.dir, "-S", "results.testout", "--test"]
-        self.batch.go(args)
+        bargs = ["-F",  "iter_{0}.testout", "-N", "4", "-P", "2", "-O", self.dir, "-S", "results.testout"]
+        self.batch.go(bargs)
         
         sargs = ["-F", self.dir + os.sep + "results.testout", "-V", "--test"]
         assert_equal(self.stats.go(sargs), "test")
@@ -111,8 +113,8 @@ class TestStatsParser:
         assert_equal(self.stats._results, [(1, "runs"), (2, "runs"), (3, "runs"), (4, "runs")])
         
     def test_go2(self):
-        bargs = ["-F",  "iter_{0}.testout", "-N", "5", "-P", "2", "-O", self.dir, "-S", "results.testout", "--test"]
-        self.batch.go(args)
+        bargs = ["-F",  "iter_{0}.testout", "-N", "5", "-P", "2", "-O", self.dir, "-S", "results.testout"]
+        self.batch.go(bargs)
         
         sargs = ["-F", self.dir + os.sep + "results.testout", "-O", self.dir + os.sep + "stats.testout", "--test"]
         assert_equal(self.stats.go(sargs), "test")
@@ -123,5 +125,32 @@ class TestStatsParser:
         assert_equal(self.stats._result_options, self.batch._options)
         assert_equal(self.stats._results, [(1, "runs"), (2, "runs"), (3, "runs"), (4, "runs"), (5, "runs")])
         
-        with open(self.dir + os.sep + "stats.testout") as outfile:
-            assert_equal(outfile.read(), "".join(["{0}\n".format(self.stats._result_options)] + (["runs\n"] * 5))
+        with open(self.dir + os.sep + "stats.testout", "rb") as outfile:
+            assert_equal(outfile.read(), "".join(["{0}\n".format(self.stats._result_options)] + (["runs\n"] * 5)))
+            
+    def test_go3(self):
+        bargs = ["-F",  "iter_{0}.testout", "-N", "5", "-P", "2", "-O", self.dir, "-S", "results.testout"]
+        self.batch.go(bargs)
+        
+        sargs = ["-F", self.dir + os.sep + "results.testout", "-O", self.dir + os.sep + "stats.testout", "-V", "--test"]
+        assert_equal(self.stats.go(sargs), "test")
+        assert_equal(self.stats._options.stats_file, self.dir + os.sep + "results.testout")
+        assert_equal(self.stats._options.out_file, self.dir + os.sep + "stats.testout")
+        assert_equal(self.stats._options.verbose, False)
+        assert_equal(self.stats._options.test, True)
+        assert_equal(self.stats._result_options, self.batch._options)
+        assert_equal(self.stats._results, [(1, "runs"), (2, "runs"), (3, "runs"), (4, "runs"), (5, "runs")])
+        
+        with open(self.dir + os.sep + "stats.testout", "rb") as outfile:
+            assert_equal(outfile.read(), "".join(["{0}\n".format(self.stats._result_options)] + (["runs\n"] * 5)))
+            
+    def test_go4(self):
+        with open(self.dir + os.sep + "results.testout", "w") as testfile:
+            print >>testfile, "test"
+        
+        sargs = ["-F", self.dir + os.sep + "results.testout", "-O", self.dir + os.sep + "stats.testout", "--test"]
+        assert_raises(ValueError, self.stats.go, sargs)
+        assert_equal(self.stats._options.stats_file, self.dir + os.sep + "results.testout")
+        assert_equal(self.stats._options.out_file, self.dir + os.sep + "stats.testout")
+        assert_equal(self.stats._options.verbose, False)
+        assert_equal(self.stats._options.test, True)
