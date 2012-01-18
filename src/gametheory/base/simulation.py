@@ -23,7 +23,7 @@ def _run_simulation(sim):
     
     return sim.run()
 
-class SimulationBatch:
+class SimulationBatch(object):
 
     """ Handles option parsing and a multiprocessing pool for simulations
 
@@ -175,7 +175,7 @@ class SimulationBatch:
     def _when_done(self):
         pass
 
-class Simulation:
+class Simulation(object):
 
     """ Base class for an individual simulation
 
