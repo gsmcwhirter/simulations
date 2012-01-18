@@ -5,9 +5,9 @@ import os
 import random
 import string
 
+from gametheory.base.optionparser import OptionParser
 from nose.tools import assert_equal
 from nose.tools import assert_raises
-from optparse import OptionParser
 
 def filename_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for x in range(size))
