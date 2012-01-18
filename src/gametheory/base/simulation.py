@@ -161,18 +161,41 @@ class SimulationBatch(object):
             self._oparser.error("Number of duplications must be positive")
 
     def _format_run(self, result):
+        """ Formats a run for printing (not result dump -- optional to implement)
+        
+        Parameters:
+            result -- the result of the run
+        
+        """
+        
         return result
 
     def _set_options(self):
+        """ Set options on the optionparser (should implement)
+        
+        """
+        
         pass
 
     def _check_options(self):
+        """ Check options on the optionparser are valid (should implement)
+        
+        """
+        
         pass
 
     def _set_data(self):
+        """ Set data values that are passed to simulation instances (should implement)
+        
+        """
+        
         pass
 
     def _when_done(self):
+        """ Do things after all duplications are done (optional to implement)
+        
+        """
+        
         pass
 
 class Simulation(object):
@@ -255,4 +278,7 @@ class Simulation(object):
         return self.result
     
     def _run(self):
+        """ Actual functionality for running the simulation (should implement)
+        
+        """
         pass
