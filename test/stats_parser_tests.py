@@ -1,5 +1,5 @@
 import gametheory.base.simulation as simulation
-import gametheory.base.stats as stats
+import gametheory.base.statsparser as stats
 
 import os
 import random

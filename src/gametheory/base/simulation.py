@@ -1,7 +1,6 @@
 """ Handle the basics of running parallel simulations
 
 Classes:
-    OptionParser -- Extension of optparse.OptionParser to allow prevention of auto-exit
     Simulation -- Framework for a basic simulation
     SimulationBatch -- Handles option parsing and a multiprocessing pool for simulations
 

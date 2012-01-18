@@ -11,7 +11,7 @@ import sys
 
 from gametheory.base.optionparser import OptionParser
 
-class StatsParser:
+class StatsParser(object):
     """ Base class for parsing result files.
     
     Public Methods:
