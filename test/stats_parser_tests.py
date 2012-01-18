@@ -39,7 +39,7 @@ class StatsParser(stats.StatsParser):
         print >>out, result
         self._results.append((count, result))
     
-    def _when_done(self):
+    def _when_done(self, out):
         return "test"
 
 class TestStatsParser:
@@ -97,7 +97,7 @@ class TestStatsParser:
         assert stats.StatsParser._check_options(self.stats) is None
         assert stats.StatsParser._handle_result_options(self.stats, sys.stdout, {}) is None
         assert stats.StatsParser._handle_result(self.stats, sys.stdout, 0, {}) is None
-        assert stats.StatsParser._when_done(self.stats) is None
+        assert stats.StatsParser._when_done(self.stats, sys.stdout) is None
         
     def test_go(self):
         bargs = ["-F",  "iter_{0}.testout", "-N", "4", "-P", "2", "-O", self.dir, "-S", "results.testout"]

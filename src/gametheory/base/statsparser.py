@@ -74,16 +74,19 @@ class StatsParser(object):
                 
                 with open(self._options.out_file, "w") as out:
                     self._go(statsfile, out)
+                    if self._options.verbose:
+                        print "Executing _when_done handler..."
+            
+                    return self._when_done(out)
             else:
                 if self._options.verbose:
                     print "Sending output to stdout..."
                 
                 self._go(statsfile, sys.stdout)
-        
-        if self._options.verbose:
-            print "Executing _when_done handler..."
+                if self._options.verbose:
+                    print "Executing _when_done handler..."
             
-        return self._when_done()
+                return self._when_done(sys.stdout)
         
     def _go(self, statsfile, out):
         """ Actually parses the data
@@ -191,8 +194,11 @@ class StatsParser(object):
         
         pass
 
-    def _when_done(self):
+    def _when_done(self, out):
         """ Do things after all duplications are done (optional to implement)
+        
+        Parameters:
+            out -- The target of any printed output (for print >>out, "stuff")
         
         """
         
