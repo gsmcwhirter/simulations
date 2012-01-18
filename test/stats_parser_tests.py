@@ -136,7 +136,7 @@ class TestStatsParser:
         assert_equal(self.stats.go(sargs), "test")
         assert_equal(self.stats._options.stats_file, self.dir + os.sep + "results.testout")
         assert_equal(self.stats._options.out_file, self.dir + os.sep + "stats.testout")
-        assert_equal(self.stats._options.verbose, False)
+        assert_equal(self.stats._options.verbose, True)
         assert_equal(self.stats._options.test, True)
         assert_equal(self.stats._result_options, self.batch._options)
         assert_equal(self.stats._results, [(1, "runs"), (2, "runs"), (3, "runs"), (4, "runs"), (5, "runs")])

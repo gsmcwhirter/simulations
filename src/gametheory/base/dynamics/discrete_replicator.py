@@ -49,7 +49,7 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         
         """
         
-        return not any(abs(i - j) >= self._effective_zero for i, j in itertools.izip(last, this))
+        return not any(abs(i - j) > self._effective_zero for i, j in itertools.izip(last, this))
     
     def _step_generation(self, pop):
         """ Step one population to the next generation
@@ -62,16 +62,17 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         # a is background (lifetime) birthrate
         
         num_types = len(self._types)
+        
         payoffs = [
             math.fsum(
                 math.fsum(
-                    float(self._interaction(k, *profile)) * float(reduce(operator.mul, [pop[profile[j]] for j in xrange(len(profile)) if j != i], 1.))
+                    float(self._interaction(place, *profile)) * float(reduce(operator.mul, [pop[profile[prplace]] for prplace in xrange(len(profile)) if prplace != place], 1.))
                     for profile in itertools.product(
-                            *([xrange(num_types) for _ in xrange(k)] + [[i]] + [xrange(num_types) for _ in xrange(k+1, self._interaction_arity)])
+                            *([xrange(num_types) for _ in xrange(place)] + [[typ]] + [xrange(num_types) for _ in xrange(place+1, self._interaction_arity)])
                     ))
-                for k in xrange(self._interaction_arity)
+                for place in xrange(self._interaction_arity)
             ) / float(self._interaction_arity)
-            for i in xrange(num_types)
+            for typ in xrange(num_types)
         ]
         
         avg_payoff = math.fsum(payoffs[i] * float(pop[i]) for i in xrange(num_types))
