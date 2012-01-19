@@ -18,18 +18,30 @@ class Sim(simulation.Simulation):
         return "runs"
         
 class StatsParser(stats.StatsParser):
-    
+
+    def _add_listeners(self):
+        super(StatsParser, self)._add_listeners()
+        self.on('oparser set up', self._set_options)
+        self.on('options parsed', self._check_options)
+        self.on('result', self._handle_result)
+        self.on('result options', self._handle_result_options)
+        self.on('done', self._when_done)
+        
+    @staticmethod    
     def _set_options(self):
         self._oparser.add_option("-t", "--test", action="store_true", dest="test", default=False, help="Testing")
         
+    @staticmethod
     def _check_options(self):
         if not self._options.test:
             self._oparser.error("Test flag not passed")
     
+    @staticmethod
     def _handle_result_options(self, out, options):
         print >>out, "{0}".format(options)
         self._result_options = options
         
+    @staticmethod
     def _handle_result(self, out, count, result):
         try:
             self._results
@@ -39,6 +51,7 @@ class StatsParser(stats.StatsParser):
         print >>out, result
         self._results.append((count, result))
     
+    @staticmethod
     def _when_done(self, out):
         return "test"
 
@@ -92,19 +105,12 @@ class TestStatsParser:
         
         assert_raises(SystemExit, self.stats.go, args)
         
-    def test_dummies(self):
-        assert stats.StatsParser._set_options(self.stats) is None
-        assert stats.StatsParser._check_options(self.stats) is None
-        assert stats.StatsParser._handle_result_options(self.stats, sys.stdout, {}) is None
-        assert stats.StatsParser._handle_result(self.stats, sys.stdout, 0, {}) is None
-        assert stats.StatsParser._when_done(self.stats, sys.stdout) is None
-        
     def test_go(self):
         bargs = ["-F",  "iter_{0}.testout", "-N", "4", "-P", "2", "-O", self.dir, "-S", "results.testout"]
         self.batch.go(bargs)
         
         sargs = ["-F", self.dir + os.sep + "results.testout", "-V", "--test"]
-        assert_equal(self.stats.go(sargs), "test")
+        assert self.stats.go(sargs) is None
         assert_equal(self.stats._options.stats_file, self.dir + os.sep + "results.testout")
         assert self.stats._options.out_file is None, "out_file got set"
         assert_equal(self.stats._options.verbose, True)
@@ -117,7 +123,7 @@ class TestStatsParser:
         self.batch.go(bargs)
         
         sargs = ["-F", self.dir + os.sep + "results.testout", "-O", self.dir + os.sep + "stats.testout", "--test"]
-        assert_equal(self.stats.go(sargs), "test")
+        assert self.stats.go(sargs) is None
         assert_equal(self.stats._options.stats_file, self.dir + os.sep + "results.testout")
         assert_equal(self.stats._options.out_file, self.dir + os.sep + "stats.testout")
         assert_equal(self.stats._options.verbose, False)
@@ -133,7 +139,7 @@ class TestStatsParser:
         self.batch.go(bargs)
         
         sargs = ["-F", self.dir + os.sep + "results.testout", "-O", self.dir + os.sep + "stats.testout", "-V", "--test"]
-        assert_equal(self.stats.go(sargs), "test")
+        assert self.stats.go(sargs) is None
         assert_equal(self.stats._options.stats_file, self.dir + os.sep + "results.testout")
         assert_equal(self.stats._options.out_file, self.dir + os.sep + "stats.testout")
         assert_equal(self.stats._options.verbose, True)

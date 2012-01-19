@@ -141,9 +141,9 @@ class TestDiscreteReplicatorInstance:
         assert_equal(len(initial_pop), len(self.sim._types))
         
     def test_run3(self):
-        self.sim._open_out_fd()
+        self.sim.emit('run', self.sim)
         (gen_ct, initial_pop, final_pop) = self.sim._run((1. - 5. * self.sim._effective_zero, 5. * self.sim._effective_zero))
-        self.sim._close_out_fd()
+        self.sim.emit('done', self.sim)
         
         assert self.sim._pop_equals(final_pop, (0., 1.)), "Final population was unexpected: {0} from {1} -> {2}".format(final_pop, initial_pop, self.sim._step_generation(initial_pop))
         assert gen_ct >= 1
@@ -201,9 +201,9 @@ class TestDiscreteReplicatorThreeway:
         assert_equal(len(initial_pop), len(self.sim._types))
         
     def test_run4(self):
-        self.sim._open_out_fd()
+        self.sim.emit('run', self.sim)
         (gen_ct, initial_pop, final_pop) = self.sim._run((1. - 2. * self.sim._effective_zero, 2. * self.sim._effective_zero))
-        self.sim._close_out_fd()
+        self.sim.emit('done', self.sim)
         
         assert self.sim._pop_equals(final_pop, (0., 1.)), "Final population was unexpected: {0}".format(final_pop)
         assert gen_ct >= 1
