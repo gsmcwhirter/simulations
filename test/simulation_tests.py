@@ -4,6 +4,7 @@ import cPickle
 import os
 import random
 import string
+import sys
 
 from gametheory.base.optionparser import OptionParser
 from nose.tools import assert_equal
@@ -23,23 +24,34 @@ class Sim2(simulation.Simulation):
         return "runs"
 
 class Batch(simulation.SimulationBatch):
+    
+    def _add_listeners(self):
+        self.on('oparser set up', self._set_options)
+        self.on('options parsed', self._check_options)
+        self.on('options parsed', self._set_data)
+        self.on('done', self._when_done)
+    
+    @staticmethod
     def _set_options(self):
         self._oparser.add_option("-t", "--test", action="store_true", dest="test", default=False, help="Testing")
         
+    @staticmethod
     def _check_options(self):
         if not self._options.test:
             self._oparser.error("Test flag not passed")
     
+    @staticmethod
     def _set_data(self):
         self._data['test'] = self._options.test
         
+    @staticmethod
     def _when_done(self):
         return "test"
 
 class TestSimulation:
     
     def setUp(self):
-        self.sim = Sim(1, 2, 3)
+        self.sim = Sim(1, 2, None)
 
     def tearDown(self):
         self.sim = None
@@ -48,31 +60,30 @@ class TestSimulation:
         assert self.sim is not None, "Sim is not set up"
         assert_equal(self.sim._data, 1)
         assert_equal(self.sim._num, 2)
-        assert_equal(self.sim._outfile, 3)
-        
-        assert self.sim._out is not None, "Sim._out is not set up"
-        assert_equal(self.sim._out_opened, True)
+        assert self.sim._outfile is None, "_outfile is not None"
+        assert_equal(self.sim._out, sys.stdout)
+        assert_equal(self.sim._out_opened, False)
         
     def test_simulation_set_outfile(self):
         self.sim.set_output_file("/tmp/test")
         assert_equal(self.sim._outfile, "/tmp/test")
         assert self.sim._out is not None, "Sim._out is not set up"
         
-        self.sim._close_out_fd()
+        self.sim._close_out_fd(self.sim)
         assert self.sim._out is None, "Sim._out was not closed"
         assert_equal(self.sim._out_opened, False)
         
-        self.sim._open_out_fd()
+        self.sim._open_out_fd(self.sim)
         assert self.sim._out is not None, "Sim._out was not opened"
         assert_equal(self.sim._out_opened, True)
         
         self.sim.set_output_file("/tmp/test2")
-        self.sim._open_out_fd()
+        self.sim._open_out_fd(self.sim)
         assert self.sim._out is not None, "Sim._out was not opened"
         assert_equal(self.sim._out_opened, True)
         
     def test_simulation_run(self):
-        assert_equal(self.sim._out_opened, True)
+        assert_equal(self.sim._out_opened, False)
         
         self.sim.set_output_file(False)
         
@@ -86,7 +97,7 @@ class TestSimulation:
 
     def test_delegation_method(self):
         self.sim.set_output_file(None)
-        assert_equal(simulation._run_simulation(self.sim), "runs")
+        assert_equal(simulation._run_simulation([Sim, 1, 2, None]), "runs")
 
 class TestSimulationBatch:
     
@@ -132,7 +143,7 @@ class TestSimulationBatch:
         
     def test_batch_go(self):
         args = ["-F",  "iter_{0}.testout", "-N", "4", "-P", "2", "-O", self.dir, "-S", "results.testout", "--test"]
-        assert_equal(self.batch.go(args), "test")
+        assert self.batch.go(args) is None
         assert_equal(self.batch._options.test, True)
         assert_equal(self.batch._options.dup, 4)
         assert_equal(self.batch._options.output_dir, self.dir)
@@ -163,7 +174,7 @@ class TestSimulationBatch:
             
     def test_batch_go2(self):
         args = ["-N", "6", "-P", "2", "-O", self.dir, "-S", "results.testout", "-Q", "--test", "-D"]
-        assert_equal(self.batch.go(args), "test")
+        assert self.batch.go(args) is None
         assert_equal(self.batch._options.test, True)
         assert_equal(self.batch._options.dup, 6)
         assert_equal(self.batch._options.output_dir, self.dir)
@@ -197,9 +208,3 @@ class TestSimulationBatch:
         args = ["-N", "6", "-P", "2", "-O", self.dir, "-S", "results.testout", "-Q", "-D"]
         
         assert_raises(SystemExit, self.batch.go, args)
-        
-    def test_dummies(self):
-        assert simulation.SimulationBatch._set_options(self.batch) is None
-        assert simulation.SimulationBatch._check_options(self.batch) is None
-        assert simulation.SimulationBatch._set_data(self.batch) is None
-        assert simulation.SimulationBatch._when_done(self.batch) is None

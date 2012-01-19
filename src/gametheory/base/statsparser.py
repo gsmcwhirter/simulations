@@ -9,21 +9,25 @@ import cPickle
 import os
 import sys
 
+from gametheory.base.eventemitter import EventEmitter
 from gametheory.base.optionparser import OptionParser
 
-class StatsParser:
+class StatsParser(EventEmitter):
     """ Base class for parsing result files.
     
     Public Methods:
         go -- Kick off parsing the results
         
     Methods to Implement:
-        _set_options 
-        _set_options -- Set OptionParser options specific to the simulation
-        _check_options -- Verify OptionParser options specific to the simulation
-        _handle_result_options -- Handle the options dumped at the top of the results file
-        _handle_result -- Handle the results from a single duplication
-        _when_done -- Clean up after all simulations are complete (optional)
+        _add_listeners -- Add listeners for various parsing events
+        
+    Events (all handlers are called with self as the first parameter):
+        done -- emitted when results are totally done (replaces _when_done)
+        go -- emitted when the go method is called
+        oparser set up -- emitted after the OptionParser is set up and able to add options
+        options parsed -- emitted after the OptionParser has parsed arguments
+        result -- emitted for a result with parameters (self, out, duplication, result)
+        result options -- emitted for the result options with parameters (self, out, options) 
         
     """
 
@@ -35,6 +39,15 @@ class StatsParser:
             option_exit_handler -- An exit handler for the option parser
         
         """
+        super(StatsParser, self).__init__()
+        
+        self._options = None
+        self._args = None
+        
+        self.on('oparser set up', self._set_base_options)
+        self.on('options parsed', self._check_base_options)
+        
+        self._add_listeners()
 
         self._oparser = OptionParser()
         
@@ -48,10 +61,7 @@ class StatsParser:
         except KeyError:
             pass
         
-        self._options = None
-        self._args = None
-        self._set_base_options()
-        self._set_options()
+        self.emit('oparser set up', self)
         
     def go(self, option_args=None, option_values=None):
         """ Pass off the parsing of the results file after some data manipulation
@@ -61,12 +71,13 @@ class StatsParser:
             option_values -- target of option parsing (probably should not use)
         
         """
+
+        self.emit('go', self)
         
         (self._options, self._args) = self._oparser.parse_args(args=option_args, values=option_values)
-        self._check_base_options()
-        self._check_options()
+
+        self.emit('options parsed', self)        
         
-        #do stuff
         with open(self._options.stats_file, "rb") as statsfile:
             if self._options.out_file:
                 if self._options.verbose:
@@ -74,16 +85,19 @@ class StatsParser:
                 
                 with open(self._options.out_file, "w") as out:
                     self._go(statsfile, out)
+                    if self._options.verbose:
+                        print "Executing _when_done handler..."
+                    
+                    self.emit('done', self, out)
             else:
                 if self._options.verbose:
                     print "Sending output to stdout..."
                 
                 self._go(statsfile, sys.stdout)
-        
-        if self._options.verbose:
-            print "Executing _when_done handler..."
+                if self._options.verbose:
+                    print "Executing _when_done handler..."
             
-        return self._when_done()
+                self.emit('done', self, sys.stdout)
         
     def _go(self, statsfile, out):
         """ Actually parses the data
@@ -110,11 +124,11 @@ class StatsParser:
                 if count == 0:
                     if self._options.verbose:
                         print "Delegating to _handle_result_options."
-                    self._handle_result_options(out, cPickle.loads(pickle))
+                    self.emit('result options', self, out, cPickle.loads(pickle))
                 else:
                     if self._options.verbose:
                         print "Delegating to _handle_result."
-                    self._handle_result(out, count, cPickle.loads(pickle))
+                    self.emit('result', self, out, count, cPickle.loads(pickle))
                 
                 pickle = ""
                 
@@ -129,7 +143,8 @@ class StatsParser:
         elif self._options.verbose:
             print "Processing done. Entries for {0} duplications found.".format(count)
         
-    def _set_base_options(self):
+    @staticmethod
+    def _set_base_options(this):
         """ Set up the basic OptionParser options
 
         Options:
@@ -139,61 +154,26 @@ class StatsParser:
 
         """
 
-        self._oparser.add_option("-F", "--statsfile", action="store", dest="stats_file", default="./output/aggregate", help="file holding aggregate stats to be parsed")
-        self._oparser.add_option("-O", "--outfile", action="store", dest="out_file", default=None, help="file to which to print data")
-        self._oparser.add_option("-V", "--verbose", action="store_true", dest="verbose", default=False, help="detailed output?")
+        this._oparser.add_option("-F", "--statsfile", action="store", dest="stats_file", default="./output/aggregate", help="file holding aggregate stats to be parsed")
+        this._oparser.add_option("-O", "--outfile", action="store", dest="out_file", default=None, help="file to which to print data")
+        this._oparser.add_option("-V", "--verbose", action="store_true", dest="verbose", default=False, help="detailed output?")
 
-    def _check_base_options(self):
+    @staticmethod
+    def _check_base_options(this):
         """ Verify the values passed to the base options
-
         Checks:
+
             - Stats file exists
 
         """
 
-        if not self._options.stats_file or not os.path.isfile(self._options.stats_file):
-            self._oparser.error("The stats file specified does not exist")
+        if not this._options.stats_file or not os.path.isfile(this._options.stats_file):
+            this._oparser.error("The stats file specified does not exist")
             
-    def _set_options(self):
-        """ Set options on the optionparser (should implement)
+    def _add_listeners(self):
+        """ Set up listeners for various events (should implement)
         
         """
         
         pass
-
-    def _check_options(self):
-        """ Check options on the optionparser are valid (should implement)
-        
-        """
-        
-        pass
-
-    def _handle_result_options(self, out, options):
-        """ Do things with the options from the run of duplications (should implement)
-        
-        Parameters:
-            out -- The target of any printed output (for print >>out, "stuff")
-            options -- The options data structure
-        
-        """
-        
-        pass
-    
-    def _handle_result(self, out, dup_num, dup_data):
-        """ Do things with a duplication result (should implement)
-        
-        Parameters:
-            out -- The target of any printed output (for print >>out, "stuff")
-            dup_num -- The number of the duplication (indexed from 1)
-            dup_data -- The duplication result data
-        
-        """
-        
-        pass
-
-    def _when_done(self):
-        """ Do things after all duplications are done (optional to implement)
-        
-        """
-        
-        pass
+            
