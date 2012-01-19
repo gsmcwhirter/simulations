@@ -1,6 +1,7 @@
 import gametheory.base.simulation as simulation
 
 import cPickle
+import gametheory.base.simulation_runner as simrunner
 import os
 import random
 import string
@@ -48,7 +49,7 @@ class Batch(simulation.SimulationBatch):
     
     @staticmethod
     def _set_data(self):
-        self._data['test'] = self.options.test
+        self.data['test'] = self.options.test
         
     @staticmethod
     def _when_done(self):
@@ -64,8 +65,8 @@ class TestSimulation:
         
     def test_simulation_init(self):
         assert self.sim is not None, "Sim is not set up"
-        assert_equal(self.sim._data, 1)
-        assert_equal(self.sim._num, 2)
+        assert_equal(self.sim.data, 1)
+        assert_equal(self.sim.num, 2)
         assert self.sim.outfile is None, "_outfile is not None"
         assert_equal(self.sim.out, sys.stdout)
         assert_equal(self.sim.out_opened, False)
@@ -103,7 +104,7 @@ class TestSimulation:
 
     def test_delegation_method(self):
         self.sim.set_output_file(None)
-        assert_equal(simulation._run_simulation([Sim, 1, 2, None]), "runs")
+        assert_equal(simrunner.run_simulation([Sim, 1, 2, None]), "runs")
 
 class TestSimulationBatch:
     
@@ -125,8 +126,8 @@ class TestSimulationBatch:
         assert self.batch is not None, "Batch is not set up"
         assert isinstance(self.batch.oparser, OptionParser), "Option parser is not initialized"
         assert self.batch.options is None, "Options is initialized"
-        assert self.batch._args is None, "Args is initialized"
-        assert_equal(self.batch._data, {})
+        assert self.batch.args is None, "Args is initialized"
+        assert_equal(self.batch.data, {})
         assert_equal(self.batch._task_dup_num, False)
         
     def test_handler_options(self):
@@ -165,7 +166,7 @@ class TestSimulationBatch:
         assert_equal(self.batch.options.pool_size, 2)
         assert_equal(self.batch.options.quiet, False)
         
-        assert_equal(self.batch._data['test'], True)
+        assert_equal(self.batch.data['test'], True)
         
         for i in range(4):
             assert os.path.isfile(self.dir + os.sep + 'iter_{0}.testout'.format(i + 1)), "Dup file {0} is missing".format(i + 1)
@@ -196,7 +197,7 @@ class TestSimulationBatch:
         assert_equal(self.batch.options.pool_size, 2)
         assert_equal(self.batch.options.quiet, True)
         
-        assert_equal(self.batch._data['test'], True)
+        assert_equal(self.batch.data['test'], True)
         
         for i in range(6):
             assert not os.path.isfile(self.dir + os.sep + 'iter_{0}.testout'.format(i + 1)), "Dup file {0} is missing".format(i + 1)
@@ -221,7 +222,8 @@ class TestSimulationBatch:
         
         assert_raises(SystemExit, self.batch.go, args)
 
-class TestSimulationBatch2:
+# Must call this explicitly using nosetests test/simulation_tests.py:SimulationBatch2.test_keyboardinterrupt
+class SimulationBatch2:
     
     def setUp(self):
         self.dir = "/tmp/" + filename_generator(8)

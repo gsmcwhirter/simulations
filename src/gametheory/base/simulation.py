@@ -7,6 +7,7 @@ Classes:
 """
 
 import cPickle
+import gametheory.base.simulation_runner as simrunner
 import multiprocessing as mp
 import os
 import sys
@@ -17,18 +18,7 @@ from gametheory.base.handlers import simbatch_default_pool_handler
 from gametheory.base.handlers import simbatch_default_start_handler
 from gametheory.base.optionparser import OptionParser
 
-def _run_simulation(task):
-    """ A simple function to run the simulation. Used with the multiprocessing pool.
-    
-    """
-    
-    klass = task.pop(0)
-    sim = klass(*task)
-    
-    return sim.run()
-
 class SimulationBatch(EventEmitter):
-
     """ Handles option parsing and a multiprocessing pool for simulations
 
     Public Methods:
@@ -65,8 +55,8 @@ class SimulationBatch(EventEmitter):
         super(SimulationBatch, self).__init__()
         
         self.options = None
-        self._args = None
-        self._data = {}
+        self.args = None
+        self.data = {}
         self._task_dup_num = False
         self._simulation_class = simulation_class
         self.finished_count = 0
@@ -100,7 +90,7 @@ class SimulationBatch(EventEmitter):
 
         self.emit('go', self)
 
-        (self.options, self._args) = self.oparser.parse_args(args=option_args, values=option_values)
+        (self.options, self.args) = self.oparser.parse_args(args=option_args, values=option_values)
         
         self._check_base_options()
         self.emit('options parsed', self)
@@ -119,7 +109,7 @@ class SimulationBatch(EventEmitter):
         pool = mp.Pool(self.options.pool_size)
         self.emit('pool started', self, pool)
 
-        tasks = [[self._simulation_class, self._data, i, None] for i in range(self.options.dup)]
+        tasks = [[self._simulation_class, self.data, i, None] for i in range(self.options.dup)]
         if self.options.file_dump:
             for i in range(len(tasks)):
                 tasks[i][3] = output_base.format(self.options.output_file.format(i+1))
@@ -130,7 +120,7 @@ class SimulationBatch(EventEmitter):
         self.emit('start', self)
 
         try:
-            results = pool.imap_unordered(_run_simulation, tasks)
+            results = pool.imap_unordered(simrunner.run_simulation, tasks)
             print >> stats, cPickle.dumps(self.options)
             print >> stats
             for result in results:
