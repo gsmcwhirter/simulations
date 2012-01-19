@@ -5,19 +5,17 @@ import math
 from nose.tools import assert_equal
 
 class PDSim(dr.NPopDiscreteReplicatorDynamics):
-    _types = [
+    types = [
         ['C', 'D'],
         ['C', 'D']
     ]
     _payoffs = [[3, 0],[4, 1]]
     
-    def _interaction(self, me, type1, type2):
-        if me == 0:
-            return self._payoffs[type1][type2]
-        elif me == 1:
-            return self._payoffs[type2][type1]
+    def _interaction(self, me, profile):
+        if me == 0 or me == 1:
+            return self._payoffs[profile[me]][profile[1 - me]]
         else:
-            raise ValueError("Type out of bounds")
+            raise ValueError("Unknown me value")
 
 class TestNPopDiscreteReplicatorDynamics:
     
@@ -34,8 +32,8 @@ class TestNPopDiscreteReplicatorDynamics:
     def test_interaction(self):
         try:
             assert self.sim._interaction
-            assert_equal(self.sim._interaction(0, 0, 1), 1)
-            assert_equal(self.sim._interaction(1, 0, 1), 1)
+            assert_equal(self.sim._interaction(0, (0, 1)), 1)
+            assert_equal(self.sim._interaction(1, (0, 1)), 1)
         except AttributeError:
             assert False, "_interaction is not defined"
         except TypeError:
@@ -43,15 +41,15 @@ class TestNPopDiscreteReplicatorDynamics:
             
     def test_effective_zero(self):
         try:
-            assert self.sim._effective_zero is not None
-            assert_equal(self.sim._effective_zero, 1e-10)
+            assert self.sim.effective_zero is not None
+            assert_equal(self.sim.effective_zero, 1e-10)
         except AttributeError:
             assert False, "_effective_zero is not defined"
             
     def test_pop_equals(self):
         try:
             assert self.sim._pop_equals
-            assert self.sim._pop_equals(((1., 0.), (1., 0.)), ((1., self.sim._effective_zero / 10.), (1., self.sim._effective_zero / 10.)))
+            assert self.sim._pop_equals(((1., 0.), (1., 0.)), ((1., self.sim.effective_zero / 10.), (1., self.sim.effective_zero / 10.)))
         except AttributeError:
             assert False, "_pop_equals is not defined"
         except TypeError:
@@ -59,14 +57,14 @@ class TestNPopDiscreteReplicatorDynamics:
             
     def test_types(self):
         try:
-            assert self.sim._types is not None
+            assert self.sim.types is not None
         except AttributeError:
             assert False, "_types is not defined"
             
     def test_background_rate(self):
         try:
-            assert self.sim._background_rate is not None
-            assert_equal(self.sim._background_rate, 0.)
+            assert self.sim.background_rate is not None
+            assert_equal(self.sim.background_rate, 0.)
         except AttributeError:
             assert False, "_background_rate is not defined"
             
@@ -84,9 +82,9 @@ class TestNPopDiscreteReplicatorDynamics:
         try:
             assert self.sim._random_population
             randpop = self.sim._random_population()
-            assert_equal(len(randpop), len(self.sim._types))
-            for k in xrange(len(self.sim._types)):
-                assert_equal(len(randpop[k]), len(self.sim._types[k]))
+            assert_equal(len(randpop), len(self.sim.types))
+            for k in xrange(len(self.sim.types)):
+                assert_equal(len(randpop[k]), len(self.sim.types[k]))
                 assert all(randpop[k][i] >= 0. for i in xrange(len(randpop[k])))
                 assert abs(math.fsum(randpop[k]) - 1.) < 1e-10
         except AttributeError:
@@ -101,15 +99,15 @@ class TestNPopDiscreteReplicatorInstance:
         pass
     
     def test_interaction(self):
-        assert_equal(self.sim._interaction(0,0,0), 3)
-        assert_equal(self.sim._interaction(0,0,1), 0)
-        assert_equal(self.sim._interaction(0,1,0), 4)
-        assert_equal(self.sim._interaction(0,1,1), 1)
+        assert_equal(self.sim._interaction(0,(0,0)), 3)
+        assert_equal(self.sim._interaction(0,(0,1)), 0)
+        assert_equal(self.sim._interaction(0,(1,0)), 4)
+        assert_equal(self.sim._interaction(0,(1,1)), 1)
         
-        assert_equal(self.sim._interaction(1,0,0), 3)
-        assert_equal(self.sim._interaction(1,0,1), 4)
-        assert_equal(self.sim._interaction(1,1,0), 0)
-        assert_equal(self.sim._interaction(1,1,1), 1)
+        assert_equal(self.sim._interaction(1,(0,0)), 3)
+        assert_equal(self.sim._interaction(1,(0,1)), 4)
+        assert_equal(self.sim._interaction(1,(1,0)), 0)
+        assert_equal(self.sim._interaction(1,(1,1)), 1)
         
     def test_step_generation(self):
         assert_equal(self.sim._step_generation(((.5, .5),(.5,.5))), ((.375, .625), (.375, .625)))
@@ -119,6 +117,6 @@ class TestNPopDiscreteReplicatorInstance:
         (gen_ct, initial_pop, final_pop) = self.sim.run()
         assert self.sim._pop_equals(final_pop, ((0., 1.), (0., 1.))), "Final population was instead {0}".format(final_pop)
         assert gen_ct >= 1
-        assert_equal(len(initial_pop), len(self.sim._types))
+        assert_equal(len(initial_pop), len(self.sim.types))
         
         

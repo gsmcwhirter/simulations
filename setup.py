@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup (
     name = 'gametheory.base',
-    version = '0.3.0',
+    version = '0.3.1',
     packages = [
         'gametheory',
         'gametheory.base'
@@ -14,7 +14,8 @@ setup (
     },
     install_requires = [
         'distribute',
-        'numpy>=1.5'
+        'numpy>=1.5',
+        'pp'
     ],
     dependency_links = ["https://www.ideafreemonoid.org/pip"],
     test_suite = 'nose.collector',

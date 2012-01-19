@@ -5,20 +5,18 @@ import math
 from nose.tools import assert_equal
 
 class PDSim(dr.OnePopDiscreteReplicatorDynamics):
-    _types = ['C', 'D']
+    types = ['C', 'D']
     _payoffs = [[3, 0],[4, 1]]
     
-    def _interaction(self, me, type1, type2):
-        if me == 0:
-            return self._payoffs[type1][type2]
-        elif me == 1:
-            return self._payoffs[type2][type1]
+    def _interaction(self, me, profile):
+        if me == 0 or me == 1:
+            return self._payoffs[profile[me]][profile[1 - me]]
         else:
             raise ValueError("Unknown me value")
     
 class PD3Sim(dr.OnePopDiscreteReplicatorDynamics):
-    _types = ['C', 'D']
-    _interaction_arity = 3
+    types = ['C', 'D']
+    interaction_arity = 3
     _payoffs = [
         [
             [3, 0], #pl2 C
@@ -30,13 +28,13 @@ class PD3Sim(dr.OnePopDiscreteReplicatorDynamics):
         ] #me D
     ]
     
-    def _interaction(self, me, type1, type2, type3):
+    def _interaction(self, me, profile):
         if me == 0:
-            return self._payoffs[type1][type2][type3]
+            return self._payoffs[profile[0]][profile[1]][profile[2]]
         elif me == 1:
-            return self._payoffs[type2][type3][type1]
+            return self._payoffs[profile[1]][profile[2]][profile[0]]
         elif me == 2:
-            return self._payoffs[type3][type1][type2]
+            return self._payoffs[profile[2]][profile[0]][profile[1]]
         else:
             raise ValueError("Unknown me value")
 
@@ -55,8 +53,8 @@ class TestDiscreteReplicatorDynamics:
     def test_interaction(self):
         try:
             assert self.sim._interaction
-            assert_equal(self.sim._interaction(0, 0, 1), 1)
-            assert_equal(self.sim._interaction(1, 0, 1), 1)
+            assert_equal(self.sim._interaction(0, (0, 1)), 1)
+            assert_equal(self.sim._interaction(1, (0, 1)), 1)
         except AttributeError:
             assert False, "_interaction is not defined"
         except TypeError:
@@ -64,15 +62,15 @@ class TestDiscreteReplicatorDynamics:
             
     def test_effective_zero(self):
         try:
-            assert self.sim._effective_zero is not None
-            assert_equal(self.sim._effective_zero, 1e-10)
+            assert self.sim.effective_zero is not None
+            assert_equal(self.sim.effective_zero, 1e-10)
         except AttributeError:
-            assert False, "_effective_zero is not defined"
+            assert False, "effective_zero is not defined"
             
     def test_pop_equals(self):
         try:
             assert self.sim._pop_equals
-            assert self.sim._pop_equals((1., 0.), (1., self.sim._effective_zero / 10.))
+            assert self.sim._pop_equals((1., 0.), (1., self.sim.effective_zero / 10.))
         except AttributeError:
             assert False, "_pop_equals is not defined"
         except TypeError:
@@ -80,14 +78,14 @@ class TestDiscreteReplicatorDynamics:
             
     def test_types(self):
         try:
-            assert self.sim._types is not None
+            assert self.sim.types is not None
         except AttributeError:
             assert False, "_types is not defined"
             
     def test_background_rate(self):
         try:
-            assert self.sim._background_rate is not None
-            assert_equal(self.sim._background_rate, 0.)
+            assert self.sim.background_rate is not None
+            assert_equal(self.sim.background_rate, 0.)
         except AttributeError:
             assert False, "_background_rate is not defined"
             
@@ -105,7 +103,7 @@ class TestDiscreteReplicatorDynamics:
         try:
             assert self.sim._random_population
             randpop = self.sim._random_population()
-            assert_equal(len(randpop), len(self.sim._types))
+            assert_equal(len(randpop), len(self.sim.types))
             assert all(randpop[i] >= 0. for i in xrange(len(randpop)))
             assert abs(math.fsum(randpop) - 1.) < 1e-10
         except AttributeError:
@@ -120,15 +118,15 @@ class TestDiscreteReplicatorInstance:
         pass
     
     def test_interaction(self):
-        assert_equal(self.sim._interaction(0,0,0), 3)
-        assert_equal(self.sim._interaction(0,0,1), 0)
-        assert_equal(self.sim._interaction(0,1,0), 4)
-        assert_equal(self.sim._interaction(0,1,1), 1)
+        assert_equal(self.sim._interaction(0,(0,0)), 3)
+        assert_equal(self.sim._interaction(0,(0,1)), 0)
+        assert_equal(self.sim._interaction(0,(1,0)), 4)
+        assert_equal(self.sim._interaction(0,(1,1)), 1)
         
-        assert_equal(self.sim._interaction(1,0,0), 3)
-        assert_equal(self.sim._interaction(1,0,1), 4)
-        assert_equal(self.sim._interaction(1,1,0), 0)
-        assert_equal(self.sim._interaction(1,1,1), 1)
+        assert_equal(self.sim._interaction(1,(0,0)), 3)
+        assert_equal(self.sim._interaction(1,(0,1)), 4)
+        assert_equal(self.sim._interaction(1,(1,0)), 0)
+        assert_equal(self.sim._interaction(1,(1,1)), 1)
         
     def test_step_generation(self):
         assert_equal(self.sim._step_generation((.5, .5)), (.375, .625))
@@ -138,16 +136,16 @@ class TestDiscreteReplicatorInstance:
         (gen_ct, initial_pop, final_pop) = self.sim.run()
         assert self.sim._pop_equals(final_pop, (0., 1.)) or self.sim._pop_equals(initial_pop, (1., 0.)), "Final population was unexpected: {0} from {1} -> {2}".format(final_pop, initial_pop, self.sim._step_generation(initial_pop))
         assert gen_ct >= 1
-        assert_equal(len(initial_pop), len(self.sim._types))
+        assert_equal(len(initial_pop), len(self.sim.types))
         
     def test_run3(self):
         self.sim.emit('run', self.sim)
-        (gen_ct, initial_pop, final_pop) = self.sim._run((1. - 5. * self.sim._effective_zero, 5. * self.sim._effective_zero))
+        (gen_ct, initial_pop, final_pop) = self.sim._run((1. - 5. * self.sim.effective_zero, 5. * self.sim.effective_zero))
         self.sim.emit('done', self.sim)
         
         assert self.sim._pop_equals(final_pop, (0., 1.)), "Final population was unexpected: {0} from {1} -> {2}".format(final_pop, initial_pop, self.sim._step_generation(initial_pop))
         assert gen_ct >= 1
-        assert_equal(len(initial_pop), len(self.sim._types))
+        assert_equal(len(initial_pop), len(self.sim.types))
         
 class TestDiscreteReplicatorThreeway:        
     
@@ -158,37 +156,37 @@ class TestDiscreteReplicatorThreeway:
         pass
     
     def test_interaction2(self):
-        assert_equal(self.sim._interaction(0,0,0,0), 3)
-        assert_equal(self.sim._interaction(1,0,0,0), 3)
-        assert_equal(self.sim._interaction(2,0,0,0), 3)
+        assert_equal(self.sim._interaction(0,(0,0,0)), 3)
+        assert_equal(self.sim._interaction(1,(0,0,0)), 3)
+        assert_equal(self.sim._interaction(2,(0,0,0)), 3)
         
-        assert_equal(self.sim._interaction(0,1,0,0), 8)
-        assert_equal(self.sim._interaction(1,1,0,0), 0)
-        assert_equal(self.sim._interaction(2,1,0,0), 0)
+        assert_equal(self.sim._interaction(0,(1,0,0)), 8)
+        assert_equal(self.sim._interaction(1,(1,0,0)), 0)
+        assert_equal(self.sim._interaction(2,(1,0,0)), 0)
         
-        assert_equal(self.sim._interaction(0,0,1,0), 0)
-        assert_equal(self.sim._interaction(1,0,1,0), 8)
-        assert_equal(self.sim._interaction(2,0,1,0), 0)
+        assert_equal(self.sim._interaction(0,(0,1,0)), 0)
+        assert_equal(self.sim._interaction(1,(0,1,0)), 8)
+        assert_equal(self.sim._interaction(2,(0,1,0)), 0)
         
-        assert_equal(self.sim._interaction(0,0,0,1), 0)
-        assert_equal(self.sim._interaction(1,0,0,1), 0)
-        assert_equal(self.sim._interaction(2,0,0,1), 8)
+        assert_equal(self.sim._interaction(0,(0,0,1)), 0)
+        assert_equal(self.sim._interaction(1,(0,0,1)), 0)
+        assert_equal(self.sim._interaction(2,(0,0,1)), 8)
         
-        assert_equal(self.sim._interaction(0,1,1,0), 4)
-        assert_equal(self.sim._interaction(1,1,1,0), 4)
-        assert_equal(self.sim._interaction(2,1,1,0), 0)
+        assert_equal(self.sim._interaction(0,(1,1,0)), 4)
+        assert_equal(self.sim._interaction(1,(1,1,0)), 4)
+        assert_equal(self.sim._interaction(2,(1,1,0)), 0)
         
-        assert_equal(self.sim._interaction(0,1,0,1), 4)
-        assert_equal(self.sim._interaction(1,1,0,1), 0)
-        assert_equal(self.sim._interaction(2,1,0,1), 4)
+        assert_equal(self.sim._interaction(0,(1,0,1)), 4)
+        assert_equal(self.sim._interaction(1,(1,0,1)), 0)
+        assert_equal(self.sim._interaction(2,(1,0,1)), 4)
         
-        assert_equal(self.sim._interaction(0,0,1,1), 0)
-        assert_equal(self.sim._interaction(1,0,1,1), 4)
-        assert_equal(self.sim._interaction(2,0,1,1), 4)
+        assert_equal(self.sim._interaction(0,(0,1,1)), 0)
+        assert_equal(self.sim._interaction(1,(0,1,1)), 4)
+        assert_equal(self.sim._interaction(2,(0,1,1)), 4)
         
-        assert_equal(self.sim._interaction(0,1,1,1), 1)
-        assert_equal(self.sim._interaction(1,1,1,1), 1)
-        assert_equal(self.sim._interaction(2,1,1,1), 1)
+        assert_equal(self.sim._interaction(0,(1,1,1)), 1)
+        assert_equal(self.sim._interaction(1,(1,1,1)), 1)
+        assert_equal(self.sim._interaction(2,(1,1,1)), 1)
 
     def test_step_generation2(self):
         assert_equal(self.sim._step_generation((.5, .5)), (.15, .85))
@@ -198,13 +196,13 @@ class TestDiscreteReplicatorThreeway:
         (gen_ct, initial_pop, final_pop) = self.sim.run()
         assert self.sim._pop_equals(final_pop, (0., 1.)) or self.sim._pop_equals(initial_pop, (1., 0.)), "Final population was unexpected: {0} from {1} -> {2}".format(final_pop, initial_pop, self.sim._step_generation(initial_pop))
         assert gen_ct >= 1
-        assert_equal(len(initial_pop), len(self.sim._types))
+        assert_equal(len(initial_pop), len(self.sim.types))
         
     def test_run4(self):
         self.sim.emit('run', self.sim)
-        (gen_ct, initial_pop, final_pop) = self.sim._run((1. - 2. * self.sim._effective_zero, 2. * self.sim._effective_zero))
+        (gen_ct, initial_pop, final_pop) = self.sim._run((1. - 2. * self.sim.effective_zero, 2. * self.sim.effective_zero))
         self.sim.emit('done', self.sim)
         
         assert self.sim._pop_equals(final_pop, (0., 1.)), "Final population was unexpected: {0}".format(final_pop)
         assert gen_ct >= 1
-        assert_equal(len(initial_pop), len(self.sim._types))
+        assert_equal(len(initial_pop), len(self.sim.types))

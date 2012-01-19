@@ -20,8 +20,16 @@ class TestOptionParser:
     def test_init(self):
         
         assert self.oparser is not None, "Option parser is not set up"
-        assert_raises(AttributeError, self.erh)
-        assert_raises(AttributeError, self.exh)
+        
+        try:
+            self.erh()
+        except AttributeError:
+            assert False, "oparser._errorhandler not defined"
+            
+        try:
+            self.exh()
+        except AttributeError:
+            assert False, "oparser._exithandler not defined"
         
     def test_errorhandler(self):
         def handler(msg):

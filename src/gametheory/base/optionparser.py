@@ -16,6 +16,12 @@ class OptionParser(optparse.OptionParser):
         
     """
     
+    def __init__(self, *args, **kwdargs):
+        optparse.OptionParser.__init__(self, *args, **kwdargs)
+        
+        self._errorhandler = None
+        self._exithandler = None
+    
     def set_error_handler(self, handler):
         """ Sets an error handling function
         
@@ -44,11 +50,11 @@ class OptionParser(optparse.OptionParser):
             
         """
         
-        try:
-            if self._errorhandler is not None:
-                return self._errorhandler(msg)
-        except AttributeError:
-            return optparse.OptionParser.error(self, msg)
+        if self._errorhandler is not None:
+            return self._errorhandler(msg)
+        else:
+            return optparse.OptionParser.error(self, msg)    
+            
             
     def exit(self, code=0, msg=None):
         """ Exits the parser/program (the default calls sys.exit). Often called by OptionParser.error().
@@ -59,8 +65,8 @@ class OptionParser(optparse.OptionParser):
         
         """
         
-        try:
-            if self._exithandler is not None:
-                return self._exithandler(code, msg)
-        except AttributeError:
-            return optparse.OptionParser.exit(self, code, msg)
+        if self._exithandler is not None:
+            return self._exithandler(code, msg)
+        else:
+            return optparse.OptionParser.exit(self, code, msg)    
+            

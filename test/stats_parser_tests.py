@@ -29,12 +29,12 @@ class StatsParser(stats.StatsParser):
         
     @staticmethod    
     def _set_options(self):
-        self._oparser.add_option("-t", "--test", action="store_true", dest="test", default=False, help="Testing")
+        self.oparser.add_option("-t", "--test", action="store_true", dest="test", default=False, help="Testing")
         
     @staticmethod
     def _check_options(self):
-        if not self._options.test:
-            self._oparser.error("Test flag not passed")
+        if not self.options.test:
+            self.oparser.error("Test flag not passed")
     
     @staticmethod
     def _handle_result_options(self, out, options):
@@ -78,19 +78,25 @@ class TestStatsParser:
     
     def test_init(self):
         assert self.stats is not None, "Stats did not get set up"
-        assert isinstance(self.stats._oparser, OptionParser), "OptionParser is not set up"
-        assert self.stats._options is None, "Options is not None"
+        assert isinstance(self.stats.oparser, OptionParser), "OptionParser is not set up"
+        assert self.stats.options is None, "Options is not None"
         assert self.stats._args is None, "Args is not None"
         
+    def test_handler_options(self):
+        sim2 = StatsParser(option_error_handler=2, option_exit_handler=3)
+        
+        assert_equal(sim2.oparser._errorhandler, 2)
+        assert_equal(sim2.oparser._exithandler, 3)
+        
     def test_options_setup(self):
-        assert self.stats._oparser.has_option("-F"), "No -F option"
-        assert self.stats._oparser.has_option("--statsfile"), "No --statsfile option"
-        assert self.stats._oparser.has_option("-O"), "No -O option"
-        assert self.stats._oparser.has_option("--outfile"), "No --outfile option"
-        assert self.stats._oparser.has_option("-V"), "No -V option"
-        assert self.stats._oparser.has_option("--verbose"), "No --verbose option"
-        assert self.stats._oparser.has_option("-t"), "No -t option"
-        assert self.stats._oparser.has_option("--test"), "No --test option"
+        assert self.stats.oparser.has_option("-F"), "No -F option"
+        assert self.stats.oparser.has_option("--statsfile"), "No --statsfile option"
+        assert self.stats.oparser.has_option("-O"), "No -O option"
+        assert self.stats.oparser.has_option("--outfile"), "No --outfile option"
+        assert self.stats.oparser.has_option("-V"), "No -V option"
+        assert self.stats.oparser.has_option("--verbose"), "No --verbose option"
+        assert self.stats.oparser.has_option("-t"), "No -t option"
+        assert self.stats.oparser.has_option("--test"), "No --test option"
         
     def test_option_failure(self):
         args = ["-F", self.dir + os.sep + "results.testout", "-V", "--test"]
@@ -111,11 +117,11 @@ class TestStatsParser:
         
         sargs = ["-F", self.dir + os.sep + "results.testout", "-V", "--test"]
         assert self.stats.go(sargs) is None
-        assert_equal(self.stats._options.stats_file, self.dir + os.sep + "results.testout")
-        assert self.stats._options.out_file is None, "out_file got set"
-        assert_equal(self.stats._options.verbose, True)
-        assert_equal(self.stats._options.test, True)
-        assert_equal(self.stats._result_options, self.batch._options)
+        assert_equal(self.stats.options.stats_file, self.dir + os.sep + "results.testout")
+        assert self.stats.options.out_file is None, "out_file got set"
+        assert_equal(self.stats.options.verbose, True)
+        assert_equal(self.stats.options.test, True)
+        assert_equal(self.stats._result_options, self.batch.options)
         assert_equal(self.stats._results, [(1, "runs"), (2, "runs"), (3, "runs"), (4, "runs")])
         
     def test_go2(self):
@@ -124,11 +130,11 @@ class TestStatsParser:
         
         sargs = ["-F", self.dir + os.sep + "results.testout", "-O", self.dir + os.sep + "stats.testout", "--test"]
         assert self.stats.go(sargs) is None
-        assert_equal(self.stats._options.stats_file, self.dir + os.sep + "results.testout")
-        assert_equal(self.stats._options.out_file, self.dir + os.sep + "stats.testout")
-        assert_equal(self.stats._options.verbose, False)
-        assert_equal(self.stats._options.test, True)
-        assert_equal(self.stats._result_options, self.batch._options)
+        assert_equal(self.stats.options.stats_file, self.dir + os.sep + "results.testout")
+        assert_equal(self.stats.options.out_file, self.dir + os.sep + "stats.testout")
+        assert_equal(self.stats.options.verbose, False)
+        assert_equal(self.stats.options.test, True)
+        assert_equal(self.stats._result_options, self.batch.options)
         assert_equal(self.stats._results, [(1, "runs"), (2, "runs"), (3, "runs"), (4, "runs"), (5, "runs")])
         
         with open(self.dir + os.sep + "stats.testout", "rb") as outfile:
@@ -140,11 +146,11 @@ class TestStatsParser:
         
         sargs = ["-F", self.dir + os.sep + "results.testout", "-O", self.dir + os.sep + "stats.testout", "-V", "--test"]
         assert self.stats.go(sargs) is None
-        assert_equal(self.stats._options.stats_file, self.dir + os.sep + "results.testout")
-        assert_equal(self.stats._options.out_file, self.dir + os.sep + "stats.testout")
-        assert_equal(self.stats._options.verbose, True)
-        assert_equal(self.stats._options.test, True)
-        assert_equal(self.stats._result_options, self.batch._options)
+        assert_equal(self.stats.options.stats_file, self.dir + os.sep + "results.testout")
+        assert_equal(self.stats.options.out_file, self.dir + os.sep + "stats.testout")
+        assert_equal(self.stats.options.verbose, True)
+        assert_equal(self.stats.options.test, True)
+        assert_equal(self.stats._result_options, self.batch.options)
         assert_equal(self.stats._results, [(1, "runs"), (2, "runs"), (3, "runs"), (4, "runs"), (5, "runs")])
         
         with open(self.dir + os.sep + "stats.testout", "rb") as outfile:
@@ -156,7 +162,7 @@ class TestStatsParser:
         
         sargs = ["-F", self.dir + os.sep + "results.testout", "-O", self.dir + os.sep + "stats.testout", "--test"]
         assert_raises(ValueError, self.stats.go, sargs)
-        assert_equal(self.stats._options.stats_file, self.dir + os.sep + "results.testout")
-        assert_equal(self.stats._options.out_file, self.dir + os.sep + "stats.testout")
-        assert_equal(self.stats._options.verbose, False)
-        assert_equal(self.stats._options.test, True)
+        assert_equal(self.stats.options.stats_file, self.dir + os.sep + "results.testout")
+        assert_equal(self.stats.options.out_file, self.dir + os.sep + "stats.testout")
+        assert_equal(self.stats.options.verbose, False)
+        assert_equal(self.stats.options.test, True)
