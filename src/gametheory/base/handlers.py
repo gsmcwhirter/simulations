@@ -37,7 +37,7 @@ def simbatch_default_pool_handler(this, pool, out=None):
         out = sys.stdout
     
     if not this.options.quiet:
-        print >> out, "Pool Started: {0} workers".format(this.options.pool_size)
+        print >> out, "Pool Started: {0} workers".format(pool.get_ncpus())
         
 def simbatch_default_start_handler(this, out=None):
     """ Default handler for the 'start' event

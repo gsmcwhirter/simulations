@@ -8,8 +8,8 @@ Classes:
 
 import cPickle
 import gametheory.base.simulation_runner as simrunner
-import multiprocessing as mp
 import os
+import pp
 import sys
 
 from gametheory.base.eventemitter import EventEmitter
@@ -102,11 +102,12 @@ class SimulationBatch(EventEmitter):
         output_base = ("{0}" + os.sep + "{1}").format(self.options.output_dir, "{0}")
 
         stats = open(output_base.format(self.options.stats_file), "wb")
+        
+        serverlist = ()
+        if self.options.cluster_string:
+            serverlist = tuple(self.options.cluster_string.split(","))
+        pool = pp.Server(ppservers=serverlist, secret=self.options.cluster_secret)
 
-        mplog = mp.log_to_stderr()
-        mplog.setLevel(mp.SUBWARNING)
-
-        pool = mp.Pool(self.options.pool_size)
         self.emit('pool started', self, pool)
 
         tasks = [[self._simulation_class, self.data, i, None] for i in range(self.options.dup)]
@@ -118,20 +119,27 @@ class SimulationBatch(EventEmitter):
                 tasks[i][3] = False
                 
         self.emit('start', self)
+        
+        def finish_run(self, out, result):
+            print >> out, cPickle.dumps(result)
+            print >> out
+            out.flush() 
+            
+            self.emit('result', self, result)
 
         try:
-            results = pool.imap_unordered(simrunner.run_simulation, tasks)
             print >> stats, cPickle.dumps(self.options)
             print >> stats
-            for result in results:
-                print >> stats, cPickle.dumps(result)
-                print >> stats
-                stats.flush()
-        
-                self.emit('result', self, result)
+            
+            job_template = pp.Template(pool, simrunner.run_simulation, callback=finish_run, callbackargs=(self, stats))
+            
+            for task in tasks:
+                job_template.submit(task)
+            
+            pool.wait()
         except KeyboardInterrupt:
-            pool.terminate()
-            pool.join()
+            pool.destroy()
+            print "caught KeyboardInterrupt"
             sys.exit(1)
 
         stats.close()
@@ -148,6 +156,8 @@ class SimulationBatch(EventEmitter):
             -P | --poolsize -- Number of simultaneous trials
             -Q | --quiet -- Suppress all output except aggregate pickle dump
             -S | --statsfile -- File name for aggregate, pickled output
+            --cluster -- List of cluster servers to use via parallelpython
+            --clustersecret -- Password to access the cluster servers
 
         """
 
@@ -158,6 +168,8 @@ class SimulationBatch(EventEmitter):
         self.oparser.add_option("-S", "--statsfile", action="store", dest="stats_file", default="aggregate", help="file for aggregate stats to be dumped")
         self.oparser.add_option("-P", "--poolsize", action="store", type="int", dest="pool_size", default=2, help="number of parallel computations to undertake")
         self.oparser.add_option("-Q", "--quiet", action="store_true", dest="quiet", default=False, help="suppress standard output")
+        self.oparser.add_option("--cluster", action="store", type="string", dest="cluster_string", default=None, help="list of cluster servers")
+        self.oparser.add_option("--clustersecret", action="store", type="string", dest="cluster_secret", default=None, help="password for the cluster")
 
     def _check_base_options(self):
         """ Verify the values passed to the base options
