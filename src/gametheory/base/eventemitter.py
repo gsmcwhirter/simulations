@@ -12,13 +12,13 @@ class EventEmitter(object):
     """ Handles event emitting and listening
     
     Public Methods:
-        addListener -- add a listener for an event
-        on -- alias for addListener
+        add_listener -- add a listener for an event
+        on -- alias for add_listener
         emit -- trigger the listeners for an event
-        removeListener -- remove a listener from an event
-        removeAllListeners -- remove all listeners from an event
+        remove_listener -- remove a listener from an event
+        remove_all_listeners -- remove all listeners from an event
         listeners -- get a copy of the listeners on an event
-        setMaxListeners -- set the maximum number of listeners for an event before warnings are issued (default: 10, None for no limit)
+        set_max_listeners -- set the maximum number of listeners for an event before warnings are issued (default: 10, None for no limit)
     
     """
     
@@ -28,21 +28,21 @@ class EventEmitter(object):
         """
         
         self._map = collections.defaultdict(list)
-        self._maxListeners = 10
+        self._max_listeners = 10
         
-    def setMaxListeners(self, maxListeners):
+    def set_max_listeners(self, max_listeners):
         """ Set the maximum number of listeners for each event.
         
         Parameters:
-            maxListeners -- the maximum number of listeners allowed (None for no limit)
+            max_listeners -- the maximum number of listeners allowed (None for no limit)
         
         """
         
-        self._maxListeners = maxListeners
+        self._max_listeners = max_listeners
         
         return self
 
-    def addListener(self, event, f=None):
+    def add_listener(self, event, listener=None):
         """ Adds a listener to an event
         
         Parameters:
@@ -51,23 +51,23 @@ class EventEmitter(object):
         
         """
         
-        if f is not None:
+        if listener is not None:
             listeners = len(self._map[event])
-            if self._maxListeners is not None and listeners >= self._maxListeners: 
-                print >>sys.stderr, "WARNING: Possible EventEmitter memory leak: {0} listeners added for {1}. Use setMaxListeners to increase the limit.".format(listeners + 1, event)
+            if self._max_listeners is not None and listeners >= self._max_listeners: 
+                print >> sys.stderr, "WARNING: Possible EventEmitter memory leak: {0} listeners added for {1}. Use set_max_listeners to increase the limit.".format(listeners + 1, event)
                 
-            self._map[event].append(f)
+            self._map[event].append(listener)
         
         return self
         
     def on(self, *args):
-        """ Alias for addListener
+        """ Alias for add_listener
         
         """
         
-        return self.addListener(*args)
+        return self.add_listener(*args)
     
-    def once(self, event, f=None):
+    def once(self, event, listener=None):
         """ Add a listener, but only execute it the first time the event occurs, then remove it
         
         Parameters:
@@ -77,12 +77,15 @@ class EventEmitter(object):
         """
         
         def handler(*args, **kwargs):
-            f(*args, **kwargs)
-            self.removeListener(event, handler)
+            """ Runs the listener and then remove it from the list
             
-        return self.addListener(event, handler)
+            """
+            listener(*args, **kwargs)
+            self.remove_listener(event, handler)
+            
+        return self.add_listener(event, handler)
         
-    def removeListener(self, event, f=None):
+    def remove_listener(self, event, listener=None):
         """ Remove a listener from an event
         
         Parameters:
@@ -92,13 +95,13 @@ class EventEmitter(object):
         """
         
         try:
-            self._map[event].remove(f)
+            self._map[event].remove(listener)
         except ValueError:
             pass
     
         return self
     
-    def removeAllListeners(self, event):
+    def remove_all_listeners(self, event):
         """ Clears all listeners from an event
         
         Parameters:

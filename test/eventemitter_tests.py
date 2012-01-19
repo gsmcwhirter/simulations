@@ -17,13 +17,13 @@ class TestEventEmitter:
         assert_equal(self.emitter.listeners('test'), [1])
         assert_equal(self.emitter.on('test', 2), self.emitter)
         assert_equal(self.emitter.listeners('test'), [1,2])
-        assert_equal(self.emitter.addListener('test', 3), self.emitter)
+        assert_equal(self.emitter.add_listener('test', 3), self.emitter)
         assert_equal(self.emitter.listeners('test'), [1,2,3])
-        assert_equal(self.emitter.addListener('test', 4), self.emitter)
+        assert_equal(self.emitter.add_listener('test', 4), self.emitter)
         assert_equal(self.emitter.listeners('test'), [1,2,3,4])
-        assert_equal(self.emitter.removeListener('test', 3), self.emitter)
+        assert_equal(self.emitter.remove_listener('test', 3), self.emitter)
         assert_equal(self.emitter.listeners('test'), [1,2,4])
-        assert_equal(self.emitter.removeAllListeners('test'), self.emitter)
+        assert_equal(self.emitter.remove_all_listeners('test'), self.emitter)
         assert_equal(self.emitter.listeners('test'), [])
         
         for i in range(11):
@@ -68,13 +68,13 @@ class TestEventEmitter:
         assert_equal(self.emitter.listeners('test'), [test])
         
     def test_max_listeners(self):
-        assert_equal(self.emitter._maxListeners, 10)
-        assert_equal(self.emitter.setMaxListeners(12), self.emitter)
-        assert_equal(self.emitter._maxListeners, 12)
+        assert_equal(self.emitter._max_listeners, 10)
+        assert_equal(self.emitter.set_max_listeners(12), self.emitter)
+        assert_equal(self.emitter._max_listeners, 12)
         
     def test_remove_notthere(self):
         assert_equal(self.emitter.listeners('test'), [])
         try:
-            assert_equal(self.emitter.removeListener('test', 2), self.emitter)
+            assert_equal(self.emitter.remove_listener('test', 2), self.emitter)
         except ValueError:
             assert False, "Threw an error when trying to remove a non-existent listener"

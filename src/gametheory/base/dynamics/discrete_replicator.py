@@ -11,6 +11,10 @@ import math
 import numpy.random as rand
 import operator
 
+from gametheory.base.handlers import drep_initial_set_handler
+from gametheory.base.handlers import drep_generation_report_handler
+from gametheory.base.handlers import drep_npop_stable_state_handler
+from gametheory.base.handlers import drep_stable_state_handler
 from gametheory.base.simulation import Simulation
 
 class OnePopDiscreteReplicatorDynamics(Simulation):
@@ -20,16 +24,33 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         _interaction -- Returns the payoff for an given set of types
         
     Values to Implement:
-        _types -- A list of names for the possible types (used to calculate dimensionality)
-        _interaction_arity -- The number of players in a given interaction (default 2)
-        _background_rate -- The natural rate of reproduction (parameter in the dynamics)
+        types -- A list of names for the possible types (used to calculate dimensionality)
+        interaction_arity -- The number of players in a given interaction (default 2)
+        background_rate -- The natural rate of reproduction (parameter in the dynamics)
+        
+    Events:
+        generation -- emitted when a generation is complete (self, generation_number, new_gen, old_gen)
+        initial set -- emitted when the initial population is set up (self, initial_pop)
+        stable state -- emitted when a stable state is reached (self, generation_count, final_pop, prev_pop, initial_pop)
     
     """
     
-    _effective_zero = 1e-10
-    _types = ['A','B']
-    _interaction_arity = 2
-    _background_rate = 0.
+    effective_zero = 1e-10
+    types = ['A','B']
+    interaction_arity = 2
+    background_rate = 0.
+    
+    def __init__(self, *args, **kwdargs):
+        """ Checks for default_handlers kwdargs parameter and then delegates to the parent.
+        
+        """
+        
+        super(OnePopDiscreteReplicatorDynamics, self).__init__(*args, **kwdargs)
+        
+        if 'default_handlers' not in kwdargs or kwdargs['default_handlers']:
+            self.on('initial set', drep_initial_set_handler)
+            self.on('generation', drep_generation_report_handler)
+            self.on('stable state', drep_stable_state_handler)
     
     def _random_population(self):
         """ Generate a random population on the unit simplex of appropriate dimensionality
@@ -38,7 +59,7 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         
         rand.seed()
         
-        return tuple(rand.dirichlet([1] * len(self._types)))
+        return tuple(rand.dirichlet([1] * len(self.types)))
     
     def _pop_equals(self, last, this):
         """ Determine if two populations are equal, accounting for floating point issues
@@ -49,7 +70,7 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         
         """
         
-        return not any(abs(i - j) > self._effective_zero for i, j in itertools.izip(last, this))
+        return not any(abs(i - j) > self.effective_zero for i, j in itertools.izip(last, this))
     
     def _step_generation(self, pop):
         """ Step one population to the next generation
@@ -61,23 +82,23 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         # x_i(t+1) = (a + u(e^i, x(t)))*x_i(t) / (a + u(x(t), x(t)))
         # a is background (lifetime) birthrate
         
-        num_types = len(self._types)
+        num_types = len(self.types)
         
         payoffs = [
             math.fsum(
                 math.fsum(
-                    float(self._interaction(place, *profile)) * float(reduce(operator.mul, [pop[profile[prplace]] for prplace in xrange(len(profile)) if prplace != place], 1.))
+                    float(self._interaction(place, profile)) * float(reduce(operator.mul, [pop[profile[prplace]] for prplace in xrange(len(profile)) if prplace != place], 1.))
                     for profile in itertools.product(
-                            *([xrange(num_types) for _ in xrange(place)] + [[typ]] + [xrange(num_types) for _ in xrange(place+1, self._interaction_arity)])
+                            *([xrange(num_types) for _ in xrange(place)] + [[typ]] + [xrange(num_types) for _ in xrange(place+1, self.interaction_arity)])
                     ))
-                for place in xrange(self._interaction_arity)
-            ) / float(self._interaction_arity)
+                for place in xrange(self.interaction_arity)
+            ) / float(self.interaction_arity)
             for typ in xrange(num_types)
         ]
         
         avg_payoff = math.fsum(payoffs[i] * float(pop[i]) for i in xrange(num_types))
         
-        new_pop = [float(pop[i]) * ((float(self._background_rate) + float(payoffs[i])) / (float(self._background_rate) + avg_payoff)) for i in xrange(num_types)]
+        new_pop = [float(pop[i]) * ((float(self.background_rate) + float(payoffs[i])) / (float(self.background_rate) + avg_payoff)) for i in xrange(num_types)]
         
         return tuple(new_pop)
     
@@ -94,57 +115,31 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         
         this_generation = initial_pop
         
-        print >>self._out, "Initial State: {0}".format(initial_pop)
-        print >>self._out
+        self.emit('initial set', self, initial_pop)
         
-        last_generation = tuple([0.] * len(self._types))
+        last_generation = tuple([0.] * len(self.types))
         generation_count = 0
         while not self._pop_equals(last_generation, this_generation):
             generation_count += 1
             last_generation = this_generation
             this_generation = self._step_generation(last_generation)
             
-            self._generation_report(generation_count, this_generation, last_generation)
+            self.emit('generation', self, generation_count, this_generation, last_generation)
             
-        print >>self._out, "=" * 72
-        print >>self._out, "Stable state! ({0} generations)".format(generation_count)
-        print >>self._out, "\t{0}".format(this_generation)
-        for i, pop in enumerate(this_generation):
-            if abs(pop - 0.) > self._effective_zero:
-                print >>self._out, "\t\t{0}: {1}".format(i, pop)
-        print >>self._out
+        self.emit('stable state', self, generation_count, this_generation, last_generation, initial_pop)
 
         return (generation_count, initial_pop, this_generation)
     
-    def _interaction(self, me, type1, type2):
+    def _interaction(self, my_place, profile):
         """ You should implement this method.
         
         Parameters:
-            me -- which place of the types the payoff is being calculated for
-            type1 -- the first player type (integer)
-            type2 -- the second player type (integer)
-            ...
-            typen -- the nth player type (integer)
+            my_place -- which place of the types the payoff is being calculated for
+            profile -- the strategy profile that is being played (tuple of integers)
         
         """
         
         return 1
-    
-    def _generation_report(self, generation_count, this_generation, last_generation):
-        """ Print out a report of the current generation
-        
-        Parameters:
-            generation_count -- the generation number
-            this_generation -- the current population
-            last_generation -- the previous population
-        
-        """
-        
-        print >>self._out, "-" * 72
-        print >>self._out, "Generation {0}:".format(generation_count)
-        print >>self._out, "\t{0}".format(this_generation)
-        print >>self._out
-        self._out.flush()
 
 class NPopDiscreteReplicatorDynamics(Simulation):
     """ Implements an abstract discrete-time replicator dynamics
@@ -153,17 +148,34 @@ class NPopDiscreteReplicatorDynamics(Simulation):
         _interaction -- Returns the payoff for types
         
     Values to Implement:
-        _types -- A list of lists of names for the possible types (used to calculate dimensionality of each population and number of populations)
-        _background_rate -- The natural rate of reproduction (parameter in the dynamics)
+        types -- A list of lists of names for the possible types (used to calculate dimensionality of each population and number of populations)
+        background_rate -- The natural rate of reproduction (parameter in the dynamics)
+        
+    Events:
+        generation -- emitted when a generation is complete (self, generation_number, new_gen, old_gen)
+        initial set -- emitted when the initial population is set up (self, initial_pop)
+        stable state -- emitted when a stable state is reached (self, generation_count, final_pop, prev_pop, initial_pop)
     
     """
 
-    _effective_zero = 1e-10
-    _types = [
+    effective_zero = 1e-10
+    types = [
         ['A','B'], 
         ['C','D']
     ]
-    _background_rate = 0.
+    background_rate = 0.
+    
+    def __init__(self, *args, **kwdargs):
+        """ Checks for default_handlers kwdargs parameter and then delegates to the parent.
+        
+        """
+        
+        super(NPopDiscreteReplicatorDynamics, self).__init__(*args, **kwdargs)
+        
+        if 'default_handlers' not in kwdargs or kwdargs['default_handlers']:
+            self.on('initial set', drep_initial_set_handler)
+            self.on('generation', drep_generation_report_handler)
+            self.on('stable state', drep_npop_stable_state_handler)
     
     def _random_population(self):
         """ Generate a set of random population on the unit simplex of appropriate dimensionalities
@@ -171,7 +183,7 @@ class NPopDiscreteReplicatorDynamics(Simulation):
         """
         rand.seed()
         
-        return tuple([tuple(rand.dirichlet([1] * len(self._types[i]))) for i in xrange(len(self._types))])
+        return tuple([tuple(rand.dirichlet([1] * len(self.types[i]))) for i in xrange(len(self.types))])
     
     def _indiv_pop_equals(self, last, this):
         """ Determine if two populations of the same type are equal or not, accounting for floating point issues
@@ -181,7 +193,7 @@ class NPopDiscreteReplicatorDynamics(Simulation):
             this -- the other population
         
         """
-        return not any(abs(i - j) >= self._effective_zero for i, j in itertools.izip(last, this))
+        return not any(abs(i - j) >= self.effective_zero for i, j in itertools.izip(last, this))
     
     def _pop_equals(self, last, this):
         """ Determine if two lists of populations are equal or not, accounting for floating point issues
@@ -205,14 +217,14 @@ class NPopDiscreteReplicatorDynamics(Simulation):
         
         payoffs = [None] * len(pop)
         avg_payoffs = [None] * len(pop)
-        num_types = [len(self._types[k]) for k in xrange(len(pop))]
+        num_types = [len(self.types[k]) for k in xrange(len(pop))]
         
         print pop
         
         for k in xrange(len(pop)):
             payoffs[k] = [
                 math.fsum(
-                    float(self._interaction(k, *profile)) * float(reduce(operator.mul, [pop[j][profile[j]] for j in xrange(len(profile)) if j != k], 1.)) 
+                    float(self._interaction(k, profile)) * float(reduce(operator.mul, [pop[j][profile[j]] for j in xrange(len(profile)) if j != k], 1.)) 
                     for profile in itertools.product(
                         *([xrange(j) for j in num_types[:k]] + [[i]] + [xrange(j) for j in num_types[k+1:]])
                     ))
@@ -225,7 +237,7 @@ class NPopDiscreteReplicatorDynamics(Simulation):
         
         new_pop = [
             tuple([
-                float(pop[k][i]) * (float(self._background_rate + payoffs[k][i]) / float(self._background_rate + avg_payoffs[k]))
+                float(pop[k][i]) * (float(self.background_rate + payoffs[k][i]) / float(self.background_rate + avg_payoffs[k]))
                 for i in xrange(num_types[k])
             ])
             for k in xrange(len(pop))
@@ -246,56 +258,28 @@ class NPopDiscreteReplicatorDynamics(Simulation):
         
         this_generation = initial_pop
         
-        print >>self._out, "Initial State: {0}".format(initial_pop)
-        print >>self._out
+        self.emit('initial set', self, initial_pop)
         
-        last_generation = tuple([tuple([0.] * len(self._types[k])) for k in xrange(len(self._types))])
+        last_generation = tuple([tuple([0.] * len(self.types[k])) for k in xrange(len(self.types))])
         generation_count = 0
         while not self._pop_equals(last_generation, this_generation):
             generation_count += 1
             last_generation = this_generation
             this_generation = self._step_generation(last_generation)
             
-            self._generation_report(generation_count, this_generation, last_generation)
+            self.emit('generation', self, generation_count, this_generation, last_generation)
             
-        print >>self._out, "=" * 72
-        print >>self._out, "Stable state! ({0} generations)".format(generation_count)
-        for k in xrange(len(this_generation)):
-            print >>self._out, "\tPopulation {0}:".format(k)
-            print >>self._out, "\t{0}".format(this_generation[k])
-            for i, pop in enumerate(this_generation[k]):
-                if abs(pop - 0.) > self._effective_zero:
-                    print >>self._out, "\t\t{0}: {1}".format(i, pop)
-        print >>self._out
+        self.emit('stable state', self, generation_count, this_generation, last_generation, initial_pop)
 
         return (generation_count, initial_pop, this_generation)
     
-    def _interaction(self, me, type1, type2):
+    def _interaction(self, my_place, profile):
         """ You should implement this method.
         
         Parameters:
-            me -- which place of the types the payoff is being calculated for
-            type1 -- the first player type (integer)
-            type2 -- the second player type (integer)
-            ...
-            typen -- the nth player type (integer)
+            my_place -- which place of the types the payoff is being calculated for
+            profile -- the profile of strategies being played (tuple of integers)
         
         """
         
         return 1
-    
-    def _generation_report(self, generation_count, this_generation, last_generation):
-        """ Print out a report of the current generation
-        
-        Parameters:
-            generation_count -- the generation number
-            this_generation -- the current population
-            last_generation -- the previous population
-        
-        """
-        
-        print >>self._out, "-" * 72
-        print >>self._out, "Generation {0}:".format(generation_count)
-        print >>self._out, "\t{0}".format(this_generation)
-        print >>self._out
-        self._out.flush()

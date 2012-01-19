@@ -31,7 +31,7 @@ class StatsParser(EventEmitter):
         
     """
 
-    def __init__(self, *args, **kwdargs):
+    def __init__(self, **kwdargs):
         """ Sets up the parsing aparatus
         
         Keyword Parameters:
@@ -41,25 +41,19 @@ class StatsParser(EventEmitter):
         """
         super(StatsParser, self).__init__()
         
-        self._options = None
+        self.options = None
         self._args = None
-        
-        self.on('oparser set up', self._set_base_options)
-        self.on('options parsed', self._check_base_options)
         
         self._add_listeners()
 
-        self._oparser = OptionParser()
+        self.oparser = OptionParser()
+        self._set_base_options()
         
-        try:
-            self._oparser.set_error_handler(kwdargs['option_error_handler'])
-        except KeyError:
-            pass
+        if 'option_error_handler' in kwdargs:
+            self.oparser.set_error_handler(kwdargs['option_error_handler'])
     
-        try:
-            self._oparser.set_exit_handler(kwdargs['option_exit_handler'])
-        except KeyError:
-            pass
+        if 'option_exit_handler' in kwdargs:
+            self.oparser.set_exit_handler(kwdargs['option_exit_handler'])
         
         self.emit('oparser set up', self)
         
@@ -74,27 +68,28 @@ class StatsParser(EventEmitter):
 
         self.emit('go', self)
         
-        (self._options, self._args) = self._oparser.parse_args(args=option_args, values=option_values)
+        (self.options, self._args) = self.oparser.parse_args(args=option_args, values=option_values)
 
+        self._check_base_options()
         self.emit('options parsed', self)        
         
-        with open(self._options.stats_file, "rb") as statsfile:
-            if self._options.out_file:
-                if self._options.verbose:
-                    print "Sending output to {0}...".format(self._options.out_file)
+        with open(self.options.stats_file, "rb") as statsfile:
+            if self.options.out_file:
+                if self.options.verbose:
+                    print "Sending output to {0}...".format(self.options.out_file)
                 
-                with open(self._options.out_file, "w") as out:
+                with open(self.options.out_file, "w") as out:
                     self._go(statsfile, out)
-                    if self._options.verbose:
+                    if self.options.verbose:
                         print "Executing _when_done handler..."
                     
                     self.emit('done', self, out)
             else:
-                if self._options.verbose:
+                if self.options.verbose:
                     print "Sending output to stdout..."
                 
                 self._go(statsfile, sys.stdout)
-                if self._options.verbose:
+                if self.options.verbose:
                     print "Executing _when_done handler..."
             
                 self.emit('done', self, sys.stdout)
@@ -111,28 +106,28 @@ class StatsParser(EventEmitter):
         count = -1
         pickle = ""
         
-        if self._options.verbose:
+        if self.options.verbose:
             print "Beginning processing of stats file..."
         
         for line in statsfile:
             if line == "\n":
-                if self._options.verbose:
+                if self.options.verbose:
                     print "Entry boundary encountered."
                 
                 count += 1
                 
                 if count == 0:
-                    if self._options.verbose:
+                    if self.options.verbose:
                         print "Delegating to _handle_result_options."
                     self.emit('result options', self, out, cPickle.loads(pickle))
                 else:
-                    if self._options.verbose:
+                    if self.options.verbose:
                         print "Delegating to _handle_result."
                     self.emit('result', self, out, count, cPickle.loads(pickle))
                 
                 pickle = ""
                 
-                if self._options.verbose:
+                if self.options.verbose:
                     print "Prepared for next entry."
                 
             else:
@@ -140,11 +135,10 @@ class StatsParser(EventEmitter):
         
         if count < 1:
             raise ValueError("Stats file contained no duplication results")
-        elif self._options.verbose:
+        elif self.options.verbose:
             print "Processing done. Entries for {0} duplications found.".format(count)
         
-    @staticmethod
-    def _set_base_options(this):
+    def _set_base_options(self):
         """ Set up the basic OptionParser options
 
         Options:
@@ -154,12 +148,11 @@ class StatsParser(EventEmitter):
 
         """
 
-        this._oparser.add_option("-F", "--statsfile", action="store", dest="stats_file", default="./output/aggregate", help="file holding aggregate stats to be parsed")
-        this._oparser.add_option("-O", "--outfile", action="store", dest="out_file", default=None, help="file to which to print data")
-        this._oparser.add_option("-V", "--verbose", action="store_true", dest="verbose", default=False, help="detailed output?")
+        self.oparser.add_option("-F", "--statsfile", action="store", dest="stats_file", default="./output/aggregate", help="file holding aggregate stats to be parsed")
+        self.oparser.add_option("-O", "--outfile", action="store", dest="out_file", default=None, help="file to which to print data")
+        self.oparser.add_option("-V", "--verbose", action="store_true", dest="verbose", default=False, help="detailed output?")
 
-    @staticmethod
-    def _check_base_options(this):
+    def _check_base_options(self):
         """ Verify the values passed to the base options
         Checks:
 
@@ -167,8 +160,8 @@ class StatsParser(EventEmitter):
 
         """
 
-        if not this._options.stats_file or not os.path.isfile(this._options.stats_file):
-            this._oparser.error("The stats file specified does not exist")
+        if not self.options.stats_file or not os.path.isfile(self.options.stats_file):
+            self.oparser.error("The stats file specified does not exist")
             
     def _add_listeners(self):
         """ Set up listeners for various events (should implement)

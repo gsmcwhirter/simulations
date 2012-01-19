@@ -5,6 +5,7 @@ import os
 import random
 import string
 import sys
+import time
 
 from gametheory.base.optionparser import OptionParser
 from nose.tools import assert_equal
@@ -19,9 +20,14 @@ class Sim(simulation.Simulation):
 
 class Sim2(simulation.Simulation):
     def _run(self):
-        print >>self._out, "runs"
+        print >> self.out, "runs"
             
         return "runs"
+    
+class Sim3(simulation.Simulation):
+    def _run(self):
+        time.sleep(.5)
+        raise KeyboardInterrupt
 
 class Batch(simulation.SimulationBatch):
     
@@ -33,16 +39,16 @@ class Batch(simulation.SimulationBatch):
     
     @staticmethod
     def _set_options(self):
-        self._oparser.add_option("-t", "--test", action="store_true", dest="test", default=False, help="Testing")
+        self.oparser.add_option("-t", "--test", action="store_true", dest="test", default=False, help="Testing")
         
     @staticmethod
     def _check_options(self):
-        if not self._options.test:
-            self._oparser.error("Test flag not passed")
+        if not self.options.test:
+            self.oparser.error("Test flag not passed")
     
     @staticmethod
     def _set_data(self):
-        self._data['test'] = self._options.test
+        self._data['test'] = self.options.test
         
     @staticmethod
     def _when_done(self):
@@ -60,30 +66,30 @@ class TestSimulation:
         assert self.sim is not None, "Sim is not set up"
         assert_equal(self.sim._data, 1)
         assert_equal(self.sim._num, 2)
-        assert self.sim._outfile is None, "_outfile is not None"
-        assert_equal(self.sim._out, sys.stdout)
-        assert_equal(self.sim._out_opened, False)
-        
+        assert self.sim.outfile is None, "_outfile is not None"
+        assert_equal(self.sim.out, sys.stdout)
+        assert_equal(self.sim.out_opened, False)
+    
     def test_simulation_set_outfile(self):
         self.sim.set_output_file("/tmp/test")
-        assert_equal(self.sim._outfile, "/tmp/test")
-        assert self.sim._out is not None, "Sim._out is not set up"
+        assert_equal(self.sim.outfile, "/tmp/test")
+        assert self.sim.out is not None, "Sim.out is not set up"
         
-        self.sim._close_out_fd(self.sim)
-        assert self.sim._out is None, "Sim._out was not closed"
-        assert_equal(self.sim._out_opened, False)
+        self.sim.close_out_fd(self.sim)
+        assert self.sim.out is None, "Sim.out was not closed"
+        assert_equal(self.sim.out_opened, False)
         
-        self.sim._open_out_fd(self.sim)
-        assert self.sim._out is not None, "Sim._out was not opened"
-        assert_equal(self.sim._out_opened, True)
+        self.sim.open_out_fd(self.sim)
+        assert self.sim.out is not None, "Sim.out was not opened"
+        assert_equal(self.sim.out_opened, True)
         
         self.sim.set_output_file("/tmp/test2")
-        self.sim._open_out_fd(self.sim)
-        assert self.sim._out is not None, "Sim._out was not opened"
-        assert_equal(self.sim._out_opened, True)
+        self.sim.open_out_fd(self.sim)
+        assert self.sim.out is not None, "Sim.out was not opened"
+        assert_equal(self.sim.out_opened, True)
         
     def test_simulation_run(self):
-        assert_equal(self.sim._out_opened, False)
+        assert_equal(self.sim.out_opened, False)
         
         self.sim.set_output_file(False)
         
@@ -91,7 +97,7 @@ class TestSimulation:
         assert_equal(self.sim.result, "runs")
         assert_equal(result, "runs")
         
-        assert_equal(self.sim._out_opened, False)
+        assert_equal(self.sim.out_opened, False)
         
         assert simulation.Simulation._run(self.sim) is None
 
@@ -117,41 +123,47 @@ class TestSimulationBatch:
         
     def test_batch_init(self):
         assert self.batch is not None, "Batch is not set up"
-        assert isinstance(self.batch._oparser, OptionParser), "Option parser is not initialized"
-        assert self.batch._options is None, "Options is initialized"
+        assert isinstance(self.batch.oparser, OptionParser), "Option parser is not initialized"
+        assert self.batch.options is None, "Options is initialized"
         assert self.batch._args is None, "Args is initialized"
         assert_equal(self.batch._data, {})
         assert_equal(self.batch._task_dup_num, False)
         
+    def test_handler_options(self):
+        sim2 = Batch(Sim2, option_error_handler=2, option_exit_handler=3)
+        
+        assert_equal(sim2.oparser._errorhandler, 2)
+        assert_equal(sim2.oparser._exithandler, 3)
+        
     def test_batch_option_setup(self):
-        assert self.batch._oparser.has_option("-D"), "No -D option"
-        assert self.batch._oparser.has_option("--nofiledump"), "No --nofiledump option"
-        assert self.batch._oparser.has_option("-F"), "No -F option"
-        assert self.batch._oparser.has_option("--filename"), "No --filename option"
-        assert self.batch._oparser.has_option("-N"), "No -N option"
-        assert self.batch._oparser.has_option("--duplications"), "No --duplications option"
-        assert self.batch._oparser.has_option("-O"), "No -O option"
-        assert self.batch._oparser.has_option("--output"), "No --output option"
-        assert self.batch._oparser.has_option("-P"), "No -P option"
-        assert self.batch._oparser.has_option("--poolsize"), "No --poolsize option"
-        assert self.batch._oparser.has_option("-Q"), "No -Q option"
-        assert self.batch._oparser.has_option("--quiet"), "No --quiet option"
-        assert self.batch._oparser.has_option("-S"), "No -S option"
-        assert self.batch._oparser.has_option("--statsfile"), "No --statsfile option"
-        assert self.batch._oparser.has_option("-t"), "No -t option"
-        assert self.batch._oparser.has_option("--test"), "No --test option"
+        assert self.batch.oparser.has_option("-D"), "No -D option"
+        assert self.batch.oparser.has_option("--nofiledump"), "No --nofiledump option"
+        assert self.batch.oparser.has_option("-F"), "No -F option"
+        assert self.batch.oparser.has_option("--filename"), "No --filename option"
+        assert self.batch.oparser.has_option("-N"), "No -N option"
+        assert self.batch.oparser.has_option("--duplications"), "No --duplications option"
+        assert self.batch.oparser.has_option("-O"), "No -O option"
+        assert self.batch.oparser.has_option("--output"), "No --output option"
+        assert self.batch.oparser.has_option("-P"), "No -P option"
+        assert self.batch.oparser.has_option("--poolsize"), "No --poolsize option"
+        assert self.batch.oparser.has_option("-Q"), "No -Q option"
+        assert self.batch.oparser.has_option("--quiet"), "No --quiet option"
+        assert self.batch.oparser.has_option("-S"), "No -S option"
+        assert self.batch.oparser.has_option("--statsfile"), "No --statsfile option"
+        assert self.batch.oparser.has_option("-t"), "No -t option"
+        assert self.batch.oparser.has_option("--test"), "No --test option"
         
     def test_batch_go(self):
         args = ["-F",  "iter_{0}.testout", "-N", "4", "-P", "2", "-O", self.dir, "-S", "results.testout", "--test"]
         assert self.batch.go(args) is None
-        assert_equal(self.batch._options.test, True)
-        assert_equal(self.batch._options.dup, 4)
-        assert_equal(self.batch._options.output_dir, self.dir)
-        assert_equal(self.batch._options.output_file, "iter_{0}.testout")
-        assert_equal(self.batch._options.file_dump, True)
-        assert_equal(self.batch._options.stats_file, "results.testout")
-        assert_equal(self.batch._options.pool_size, 2)
-        assert_equal(self.batch._options.quiet, False)
+        assert_equal(self.batch.options.test, True)
+        assert_equal(self.batch.options.dup, 4)
+        assert_equal(self.batch.options.output_dir, self.dir)
+        assert_equal(self.batch.options.output_file, "iter_{0}.testout")
+        assert_equal(self.batch.options.file_dump, True)
+        assert_equal(self.batch.options.stats_file, "results.testout")
+        assert_equal(self.batch.options.pool_size, 2)
+        assert_equal(self.batch.options.quiet, False)
         
         assert_equal(self.batch._data['test'], True)
         
@@ -165,7 +177,7 @@ class TestSimulationBatch:
         
         with open(self.dir + os.sep + 'results.testout', "r") as results_file:
             should_be = ''
-            should_be += cPickle.dumps(self.batch._options) + "\n"
+            should_be += cPickle.dumps(self.batch.options) + "\n"
             should_be += "\n"
             for _ in range(4):
                 should_be += cPickle.dumps("runs") + "\n"
@@ -175,14 +187,14 @@ class TestSimulationBatch:
     def test_batch_go2(self):
         args = ["-N", "6", "-P", "2", "-O", self.dir, "-S", "results.testout", "-Q", "--test", "-D"]
         assert self.batch.go(args) is None
-        assert_equal(self.batch._options.test, True)
-        assert_equal(self.batch._options.dup, 6)
-        assert_equal(self.batch._options.output_dir, self.dir)
-        assert_equal(self.batch._options.output_file, "duplication_{0}")
-        assert_equal(self.batch._options.file_dump, False)
-        assert_equal(self.batch._options.stats_file, "results.testout")
-        assert_equal(self.batch._options.pool_size, 2)
-        assert_equal(self.batch._options.quiet, True)
+        assert_equal(self.batch.options.test, True)
+        assert_equal(self.batch.options.dup, 6)
+        assert_equal(self.batch.options.output_dir, self.dir)
+        assert_equal(self.batch.options.output_file, "duplication_{0}")
+        assert_equal(self.batch.options.file_dump, False)
+        assert_equal(self.batch.options.stats_file, "results.testout")
+        assert_equal(self.batch.options.pool_size, 2)
+        assert_equal(self.batch.options.quiet, True)
         
         assert_equal(self.batch._data['test'], True)
         
@@ -192,7 +204,7 @@ class TestSimulationBatch:
         
         with open(self.dir + os.sep + 'results.testout', "r") as results_file:
             should_be = ''
-            should_be += cPickle.dumps(self.batch._options) + "\n"
+            should_be += cPickle.dumps(self.batch.options) + "\n"
             should_be += "\n"
             for _ in range(6):
                 should_be += cPickle.dumps("runs") + "\n"
@@ -208,3 +220,25 @@ class TestSimulationBatch:
         args = ["-N", "6", "-P", "2", "-O", self.dir, "-S", "results.testout", "-Q", "-D"]
         
         assert_raises(SystemExit, self.batch.go, args)
+
+class TestSimulationBatch2:
+    
+    def setUp(self):
+        self.dir = "/tmp/" + filename_generator(8)
+        self.batch = Batch(Sim3)
+        
+    def tearDown(self):
+        self.batch = None
+        if os.path.isdir(self.dir):
+            files = os.listdir(self.dir)
+            for f in files:
+                if f == "." or f == "..": continue
+                if f[-8:] == ".testout":
+                    os.remove(self.dir + os.sep + f)
+            os.rmdir(self.dir)
+        
+    def test_keyboardinterrupt(self):
+        args = ["-F",  "iter_{0}.testout", "-N", "4", "-P", "2", "-O", self.dir, "-S", "results.testout", "--test"]
+        assert_raises(SystemExit, self.batch.go(args))
+        
+        
