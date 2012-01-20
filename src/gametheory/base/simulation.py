@@ -17,6 +17,7 @@ from gametheory.base.handlers import simbatch_default_result_handler
 from gametheory.base.handlers import simbatch_default_pool_handler
 from gametheory.base.handlers import simbatch_default_start_handler
 from gametheory.base.optionparser import OptionParser
+from gametheory.base.util import random_string
 
 class SimulationBatch(EventEmitter):
     """ Handles option parsing and a multiprocessing pool for simulations
@@ -60,6 +61,7 @@ class SimulationBatch(EventEmitter):
         self._task_dup_num = False
         self._simulation_class = simulation_class
         self.finished_count = 0
+        self.identifier = random_string()
         
         if default_handlers: 
             self.on('pool started', simbatch_default_pool_handler)
@@ -120,23 +122,24 @@ class SimulationBatch(EventEmitter):
                 
         self.emit('start', self)
         
-        def finish_run(self, out, result):
+        def finish_run(this, out, result):
             print >> out, cPickle.dumps(result)
             print >> out
             out.flush() 
+            this.finished_count += 1
             
-            self.emit('result', self, result)
+            this.emit('result', this, result)
 
         try:
             print >> stats, cPickle.dumps(self.options)
             print >> stats
             
-            job_template = pp.Template(pool, simrunner.run_simulation, callback=finish_run, callbackargs=(self, stats))
+            job_template = pp.Template(pool, simrunner.run_simulation, callback=finish_run, callbackargs=(self, stats), group=self.identifier)
             
             for task in tasks:
                 job_template.submit(task)
             
-            pool.wait()
+            pool.wait(self.identifier)
         except KeyboardInterrupt:
             pool.destroy()
             print "caught KeyboardInterrupt"

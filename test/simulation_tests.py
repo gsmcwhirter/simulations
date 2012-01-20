@@ -4,6 +4,7 @@ import cPickle
 import gametheory.base.simulation_runner as simrunner
 import os
 import random
+import re
 import string
 import subprocess
 import sys
@@ -131,6 +132,8 @@ class TestSimulationBatch:
         assert self.batch.args is None, "Args is initialized"
         assert_equal(self.batch.data, {})
         assert_equal(self.batch._task_dup_num, False)
+        assert_equal(len(self.batch.identifier), 6)
+        assert re.match('[{0}{1}]{{6}}'.format(string.ascii_uppercase, string.digits), self.batch.identifier)
         
     def test_handler_options(self):
         sim2 = Batch(Sim2, option_error_handler=2, option_exit_handler=3)
