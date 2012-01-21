@@ -123,6 +123,15 @@ class SimulationBatch(EventEmitter):
         self.emit('start', self)
         
         def finish_run(this, out, result):
+            """ The pp task callback to handle finished simulations as they come in
+            
+            Parameters:
+                this -- a reference to self
+                out -- the file-like object to which to print data
+                result -- the result object returned by the simulation
+            
+            """
+            
             print >> out, cPickle.dumps(result)
             print >> out
             out.flush() 

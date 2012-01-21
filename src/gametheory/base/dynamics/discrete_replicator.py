@@ -47,6 +47,8 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         
         super(OnePopDiscreteReplicatorDynamics, self).__init__(*args, **kwdargs)
         
+        self.result_data = None
+        
         if 'default_handlers' not in kwdargs or kwdargs['default_handlers']:
             self.on('initial set', drep_initial_set_handler)
             self.on('generation', drep_generation_report_handler)
@@ -128,7 +130,7 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
             
         self.emit('stable state', self, generation_count, this_generation, last_generation, initial_pop)
 
-        return (generation_count, initial_pop, this_generation)
+        return (generation_count, initial_pop, this_generation, self.result_data)
     
     def _interaction(self, my_place, profile):
         """ You should implement this method.
@@ -171,6 +173,8 @@ class NPopDiscreteReplicatorDynamics(Simulation):
         """
         
         super(NPopDiscreteReplicatorDynamics, self).__init__(*args, **kwdargs)
+        
+        self.result_data = None
         
         if 'default_handlers' not in kwdargs or kwdargs['default_handlers']:
             self.on('initial set', drep_initial_set_handler)
@@ -271,7 +275,7 @@ class NPopDiscreteReplicatorDynamics(Simulation):
             
         self.emit('stable state', self, generation_count, this_generation, last_generation, initial_pop)
 
-        return (generation_count, initial_pop, this_generation)
+        return (generation_count, initial_pop, this_generation, self.result_data)
     
     def _interaction(self, my_place, profile):
         """ You should implement this method.
