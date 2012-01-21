@@ -17,6 +17,25 @@ class PDSim(dr.NPopDiscreteReplicatorDynamics):
         else:
             raise ValueError("Unknown me value")
 
+class PDSim2(dr.NPopDiscreteReplicatorDynamics):
+    types = [
+        ['C', 'D'],
+        ['C', 'D']
+    ]
+    _payoffs = [[3, 0],[4, 1]]
+    
+    def _interaction(self, me, profile):
+        if me == 0 or me == 1:
+            return self._payoffs[profile[me]][profile[1 - me]]
+        else:
+            raise ValueError("Unknown me value")
+            
+    def _add_listeners(self):
+        def generation_listener(this, ct, this_pop, last_pop):
+            this.result_data = "test"
+            
+        self.on('generation', generation_listener)
+
 class TestNPopDiscreteReplicatorDynamics:
     
     def setUp(self):
@@ -114,9 +133,26 @@ class TestNPopDiscreteReplicatorInstance:
         assert_equal(self.sim._step_generation(((0., 1.),(0.,1.))), ((0., 1.),(0., 1.)))
     
     def test_run(self):
-        (gen_ct, initial_pop, final_pop) = self.sim.run()
+        (gen_ct, initial_pop, final_pop, custom_data) = self.sim.run()
         assert self.sim._pop_equals(final_pop, ((0., 1.), (0., 1.))), "Final population was instead {0}".format(final_pop)
         assert gen_ct >= 1
         assert_equal(len(initial_pop), len(self.sim.types))
+        assert custom_data is None, "Custom data got set somehow"
+
+class TestNPopDiscreteReplicatorInstance2:
+    
+    def setUp(self):
+        self.sim = PDSim2({}, 1, False)
+        
+    def tearDown(self):
+        pass        
+    
+    def test_run(self):
+        (gen_ct, initial_pop, final_pop, custom_data) = self.sim.run()
+        assert self.sim._pop_equals(final_pop, ((0., 1.), (0., 1.))), "Final population was instead {0}".format(final_pop)
+        assert gen_ct >= 1
+        assert_equal(len(initial_pop), len(self.sim.types))
+        assert_equal(self.sim.result_data, "test")
+        assert_equal(custom_data, "test")
         
         
