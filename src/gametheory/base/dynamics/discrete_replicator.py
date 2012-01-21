@@ -29,6 +29,7 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         background_rate -- The natural rate of reproduction (parameter in the dynamics)
         
     Events:
+        force stop -- emitted when the generation iteration is broken by a forced stop condition (instead of stable state event)
         generation -- emitted when a generation is complete (self, generation_number, new_gen, old_gen)
         initial set -- emitted when the initial population is set up (self, initial_pop)
         stable state -- emitted when a stable state is reached (self, generation_count, final_pop, prev_pop, initial_pop)
@@ -48,11 +49,13 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         super(OnePopDiscreteReplicatorDynamics, self).__init__(*args, **kwdargs)
         
         self.result_data = None
+        self.force_stop = False
         
         if 'default_handlers' not in kwdargs or kwdargs['default_handlers']:
             self.on('initial set', drep_initial_set_handler)
             self.on('generation', drep_generation_report_handler)
             self.on('stable state', drep_stable_state_handler)
+            self.on('force stop', drep_stable_state_handler)
     
     def _random_population(self):
         """ Generate a random population on the unit simplex of appropriate dimensionality
@@ -121,14 +124,17 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         
         last_generation = tuple([0.] * len(self.types))
         generation_count = 0
-        while not self._pop_equals(last_generation, this_generation):
+        while not self._pop_equals(last_generation, this_generation) and not self.force_stop:
             generation_count += 1
             last_generation = this_generation
             this_generation = self._step_generation(last_generation)
             
             self.emit('generation', self, generation_count, this_generation, last_generation)
-            
-        self.emit('stable state', self, generation_count, this_generation, last_generation, initial_pop)
+        
+        if self.force_stop:
+            self.emit('force stop', self, generation_count, this_generation, last_generation, initial_pop)
+        else:    
+            self.emit('stable state', self, generation_count, this_generation, last_generation, initial_pop)
 
         return (generation_count, initial_pop, this_generation, self.result_data)
     
@@ -175,11 +181,13 @@ class NPopDiscreteReplicatorDynamics(Simulation):
         super(NPopDiscreteReplicatorDynamics, self).__init__(*args, **kwdargs)
         
         self.result_data = None
+        self.force_stop = False
         
         if 'default_handlers' not in kwdargs or kwdargs['default_handlers']:
             self.on('initial set', drep_initial_set_handler)
             self.on('generation', drep_generation_report_handler)
             self.on('stable state', drep_npop_stable_state_handler)
+            self.on('force stop', drep_npop_stable_state_handler)
     
     def _random_population(self):
         """ Generate a set of random population on the unit simplex of appropriate dimensionalities
@@ -266,14 +274,17 @@ class NPopDiscreteReplicatorDynamics(Simulation):
         
         last_generation = tuple([tuple([0.] * len(self.types[k])) for k in xrange(len(self.types))])
         generation_count = 0
-        while not self._pop_equals(last_generation, this_generation):
+        while not self._pop_equals(last_generation, this_generation) and not self.force_stop:
             generation_count += 1
             last_generation = this_generation
             this_generation = self._step_generation(last_generation)
             
             self.emit('generation', self, generation_count, this_generation, last_generation)
             
-        self.emit('stable state', self, generation_count, this_generation, last_generation, initial_pop)
+        if self.force_stop:
+            self.emit('force stop', self, generation_count, this_generation, last_generation, initial_pop)
+        else:
+            self.emit('stable state', self, generation_count, this_generation, last_generation, initial_pop)
 
         return (generation_count, initial_pop, this_generation, self.result_data)
     

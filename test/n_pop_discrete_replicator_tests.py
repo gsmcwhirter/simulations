@@ -35,6 +35,26 @@ class PDSim2(dr.NPopDiscreteReplicatorDynamics):
             this.result_data = "test"
             
         self.on('generation', generation_listener)
+        
+class PDSim3(dr.NPopDiscreteReplicatorDynamics):
+    types = [
+        ['C', 'D'],
+        ['C', 'D']
+    ]
+    _payoffs = [[3, 0],[4, 1]]
+    
+    def _interaction(self, me, profile):
+        if me == 0 or me == 1:
+            return self._payoffs[profile[me]][profile[1 - me]]
+        else:
+            raise ValueError("Unknown me value")
+            
+    def _add_listeners(self):
+        def generation_listener(this, ct, this_pop, last_pop):
+            this.result_data = "test2"
+            this.force_stop = True
+            
+        self.on('generation', generation_listener)
 
 class TestNPopDiscreteReplicatorDynamics:
     
@@ -155,4 +175,19 @@ class TestNPopDiscreteReplicatorInstance2:
         assert_equal(self.sim.result_data, "test")
         assert_equal(custom_data, "test")
         
+class TestNPopDiscreteReplicatorInstance3:
+    
+    def setUp(self):
+        self.sim = PDSim3({}, 1, False)
         
+    def tearDown(self):
+        pass        
+    
+    def test_run(self):
+        (gen_ct, initial_pop, final_pop, custom_data) = self.sim.run()
+        assert not self.sim._pop_equals(final_pop, ((0., 1.), (0., 1.))), "Final population was still {0}".format(final_pop)
+        assert_equal(gen_ct, 1)
+        assert_equal(len(initial_pop), len(self.sim.types))
+        assert_equal(self.sim.result_data, "test2")
+        assert_equal(custom_data, "test2")
+        assert_equal(self.sim.force_stop, True)        
