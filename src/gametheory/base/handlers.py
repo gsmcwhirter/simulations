@@ -20,7 +20,6 @@ def simbatch_default_result_handler(this, result, out=None):
     if out is None:
         out = sys.stdout
     
-    this.finished_count += 1
     if not this.options.quiet:
         print >> out, result
         print >> out, "done #{0}".format(this.finished_count)
@@ -86,11 +85,14 @@ def drep_stable_state_handler(this, generation_count, this_generation, last_gene
     """
     
     print >> this.out, "=" * 72
-    print >> this.out, "Stable state! ({0} generations)".format(generation_count)
+    if this.force_stop:
+        print >> this.out, "Force stop! ({0} generations)".format(generation_count)
+    else:
+        print >> this.out, "Stable state! ({0} generations)".format(generation_count)
     print >> this.out, "\t{0}".format(this_generation)
     for i, pop in enumerate(this_generation):
         if abs(pop - 0.) > this.effective_zero:
-            print >> this.out, "\t\t{0}: {1}".format(i, pop)
+            print >> this.out, "\t\t{0:>5}: {1:>20}: {2}".format(i, this.types[i], pop)
     print >> this.out
     
 def drep_npop_stable_state_handler(this, generation_count, this_generation, last_generation, initial_pop):    
@@ -104,12 +106,15 @@ def drep_npop_stable_state_handler(this, generation_count, this_generation, last
     
     """
     print >> this.out, "=" * 72
-    print >> this.out, "Stable state! ({0} generations)".format(generation_count)
+    if this.force_stop:
+        print >> this.out, "Force stop! ({0} generations)".format(generation_count)
+    else:
+        print >> this.out, "Stable state! ({0} generations)".format(generation_count)
     for k in xrange(len(this_generation)):
         print >> this.out, "\tPopulation {0}:".format(k)
         print >> this.out, "\t{0}".format(this_generation[k])
         for i, pop in enumerate(this_generation[k]):
             if abs(pop - 0.) > this.effective_zero:
-                print >> this.out, "\t\t{0}: {1}".format(i, pop)
+                print >> this.out, "\t\t{0:>5}: {1:>20}: {2}".format(i, this.types[k][i], pop)
     print >> this.out
     

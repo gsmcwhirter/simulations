@@ -29,7 +29,23 @@ class PDSim2(dr.OnePopDiscreteReplicatorDynamics):
             this.result_data = "test"
             
         self.on('generation', generation_listener)            
-        
+    
+class PDSim3(dr.OnePopDiscreteReplicatorDynamics):
+    types = ['C', 'D']
+    _payoffs = [[3, 0],[4, 1]]
+    
+    def _interaction(self, me, profile):
+        if me == 0 or me == 1:
+            return self._payoffs[profile[me]][profile[1 - me]]
+        else:
+            raise ValueError("Unknown me value")
+            
+    def _add_listeners(self):
+        def generation_listener(this, ct, this_pop, last_pop):
+            this.force_stop = True
+            this.result_data = "test2"
+            
+        self.on('generation', generation_listener)
             
 class PD3Sim(dr.OnePopDiscreteReplicatorDynamics):
     types = ['C', 'D']
@@ -174,7 +190,7 @@ class TestDiscreteReplicatorInstance2:
     def tearDown(self):
         pass
     
-    def test_run4(self):
+    def test_run5(self):
         (gen_ct, initial_pop, final_pop, custom_data) = self.sim.run()
         assert self.sim._pop_equals(final_pop, (0., 1.)) or self.sim._pop_equals(initial_pop, (1., 0.)), "Final population was unexpected: {0} from {1} -> {2}".format(final_pop, initial_pop, self.sim._step_generation(initial_pop))
         assert gen_ct >= 1
@@ -182,6 +198,23 @@ class TestDiscreteReplicatorInstance2:
         assert_equal(self.sim.result_data, "test")
         assert_equal(custom_data, "test")
         
+class TestDiscreteReplicatorInstance3:
+    
+    def setUp(self):
+        self.sim = PDSim3({}, 1, False)
+        
+    def tearDown(self):
+        pass
+    
+    def test_run6(self):
+        (gen_ct, initial_pop, final_pop, custom_data) = self.sim.run()
+        assert not self.sim._pop_equals(final_pop, (0., 1.)) or self.sim._pop_equals(initial_pop, (1., 0.)), "Final population was unexpected: {0} from {1} -> {2}".format(final_pop, initial_pop, self.sim._step_generation(initial_pop))
+        assert_equal(gen_ct, 1)
+        assert_equal(len(initial_pop), len(self.sim.types))
+        assert_equal(self.sim.result_data, "test2")
+        assert_equal(custom_data, "test2")
+        assert_equal(self.sim.force_stop, True)        
+
 class TestDiscreteReplicatorThreeway:        
     
     def setUp(self):
