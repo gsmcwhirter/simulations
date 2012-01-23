@@ -4,9 +4,16 @@ import math
 
 from nose.tools import assert_equal
 
-class PDSim(dr.OnePopDiscreteReplicatorDynamics):
-    types = ['C', 'D']
+class PDSim(dr.OnePopDiscreteReplicatorDynamics): 
     _payoffs = [[3, 0],[4, 1]]
+    
+    def __init__(self, *args, **kwdargs):
+        if 'types' in kwdargs:
+            types = kwdargs['types']
+        else:
+            types = ['C', 'D']
+            
+        super(PDSim, self).__init__(*args, types=types, **kwdargs)
     
     def _interaction(self, me, profile):
         if me == 0 or me == 1:
@@ -15,8 +22,15 @@ class PDSim(dr.OnePopDiscreteReplicatorDynamics):
             raise ValueError("Unknown me value")
             
 class PDSim2(dr.OnePopDiscreteReplicatorDynamics):
-    types = ['C', 'D']
     _payoffs = [[3, 0],[4, 1]]
+    
+    def __init__(self, *args, **kwdargs):
+        if 'types' in kwdargs:
+            types = kwdargs['types']
+        else:
+            types = ['C', 'D']
+            
+        super(PDSim2, self).__init__(*args, types=types, **kwdargs)
     
     def _interaction(self, me, profile):
         if me == 0 or me == 1:
@@ -31,8 +45,15 @@ class PDSim2(dr.OnePopDiscreteReplicatorDynamics):
         self.on('generation', generation_listener)            
     
 class PDSim3(dr.OnePopDiscreteReplicatorDynamics):
-    types = ['C', 'D']
     _payoffs = [[3, 0],[4, 1]]
+    
+    def __init__(self, *args, **kwdargs):
+        if 'types' in kwdargs:
+            types = kwdargs['types']
+        else:
+            types = ['C', 'D']
+            
+        super(PDSim3, self).__init__(*args, types=types, **kwdargs)
     
     def _interaction(self, me, profile):
         if me == 0 or me == 1:
@@ -48,8 +69,6 @@ class PDSim3(dr.OnePopDiscreteReplicatorDynamics):
         self.on('generation', generation_listener)
             
 class PD3Sim(dr.OnePopDiscreteReplicatorDynamics):
-    types = ['C', 'D']
-    interaction_arity = 3
     _payoffs = [
         [
             [3, 0], #pl2 C
@@ -60,6 +79,19 @@ class PD3Sim(dr.OnePopDiscreteReplicatorDynamics):
             [4, 1] #pl2 D
         ] #me D
     ]
+    
+    def __init__(self, *args, **kwdargs):
+        if 'types' in kwdargs:
+            types = kwdargs['types']
+        else:
+            types = ['C', 'D']
+            
+        if 'interaction_arity' in kwdargs:
+            ia = kwdargs['interaction_arity']
+        else:
+            ia = 3
+            
+        super(PD3Sim, self).__init__(*args, types=types, interaction_arity=ia, **kwdargs)
     
     def _interaction(self, me, profile):
         if me == 0:
@@ -141,6 +173,21 @@ class TestDiscreteReplicatorDynamics:
             assert abs(math.fsum(randpop) - 1.) < 1e-10
         except AttributeError:
             assert False, "_random_population is not defined"
+
+class TestDiscreteReplicatorCustomization:
+    
+    def setUp(self):
+        pass
+    
+    def tearDown(self):
+        pass
+    
+    def test_config(self):
+        sim = dr.OnePopDiscreteReplicatorDynamics({}, 1, False, interaction_arity=4, types=['C','D'], effective_zero=1e-11, background_rate=1e-6)
+        assert_equal(sim.interaction_arity, 4)
+        assert_equal(sim.types, ['C','D'])
+        assert_equal(sim.effective_zero, 1e-11)
+        assert_equal(sim.background_rate, 1e-6)
             
 class TestDiscreteReplicatorInstance:
     

@@ -4,10 +4,11 @@ from setuptools import setup
 
 setup (
     name = 'gametheory.base',
-    version = '0.3.4',
+    version = '0.3.5',
     packages = [
         'gametheory',
-        'gametheory.base'
+        'gametheory.base',
+        'gametheory.base.dynamics'
     ],
     package_dir = {
         '': 'src',

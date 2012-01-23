@@ -1,8 +1,12 @@
 """ Simulation classes that handle variations of discrete-time replicator dynamics
 
 Classes:
+    
     OnePopDiscreteReplicatorDynamics
+      implements one-population discrete time replicator dynamics
+      
     NPopDiscreteReplicatorDynamics
+      implements n-population discrete time replicator dynamics
 
 """
 
@@ -11,43 +15,80 @@ import math
 import numpy.random as rand
 import operator
 
-from gametheory.base.handlers import drep_initial_set_handler
-from gametheory.base.handlers import drep_generation_report_handler
-from gametheory.base.handlers import drep_npop_stable_state_handler
-from gametheory.base.handlers import drep_stable_state_handler
+from gametheory.base.dynamics.handlers import drep_initial_set_handler
+from gametheory.base.dynamics.handlers import drep_generation_report_handler
+from gametheory.base.dynamics.handlers import drep_npop_stable_state_handler
+from gametheory.base.dynamics.handlers import drep_stable_state_handler
 from gametheory.base.simulation import Simulation
 
 class OnePopDiscreteReplicatorDynamics(Simulation):
     """ Implements an abstract discrete-time replicator dynamics
     
     Methods to Implement:
-        _interaction -- Returns the payoff for an given set of types
         
-    Values to Implement:
-        types -- A list of names for the possible types (used to calculate dimensionality)
-        interaction_arity -- The number of players in a given interaction (default 2)
-        background_rate -- The natural rate of reproduction (parameter in the dynamics)
+        _interaction
+          Returns the payoff for an given set of types
         
     Events:
-        force stop -- emitted when the generation iteration is broken by a forced stop condition (instead of stable state event)
-        generation -- emitted when a generation is complete (self, generation_number, new_gen, old_gen)
-        initial set -- emitted when the initial population is set up (self, initial_pop)
-        stable state -- emitted when a stable state is reached (self, generation_count, final_pop, prev_pop, initial_pop)
+        
+        force stop
+          emitted when the generation iteration is broken by a forced stop condition (instead of stable state event)
+        
+        generation
+          emitted when a generation is complete (self, generation_number, new_gen, old_gen)
+        
+        initial set
+          emitted when the initial population is set up (self, initial_pop)
+        
+        stable state
+          emitted when a stable state is reached (self, generation_count, final_pop, prev_pop, initial_pop)
     
     """
     
-    effective_zero = 1e-10
-    types = ['A','B']
-    interaction_arity = 2
-    background_rate = 0.
-    
     def __init__(self, *args, **kwdargs):
         """ Checks for default_handlers kwdargs parameter and then delegates to the parent.
+        
+        Keyword Parameters:
+            
+            effective_zero
+              The effective zero value for floating-point comparisons (default 1e-10)
+            
+            types
+              A list of names for the possible types (used to calculate dimensionality, default ['A','B'])
+            
+            interaction_arity
+              The number of players in a given interaction (default 2)
+            
+            background_rate
+              The natural rate of reproduction (parameter in the dynamics, default 0.)
+            
+            default_handlers
+              Flag to use the default event handlers (default True)
         
         """
         
         super(OnePopDiscreteReplicatorDynamics, self).__init__(*args, **kwdargs)
         
+        if 'effective_zero' in kwdargs and kwdargs['effective_zero']:
+            self.effective_zero = float(kwdargs['effective_zero'])
+        else:
+            self.effective_zero = 1e-10
+            
+        if 'types' in kwdargs and kwdargs['types']:
+            self.types = kwdargs['types']
+        else:  
+            self.types = ['A','B']
+            
+        if 'interaction_arity' in kwdargs and kwdargs['interaction_arity']:
+            self.interaction_arity = int(kwdargs['interaction_arity'])
+        else:
+            self.interaction_arity = 2
+            
+        if 'background_rate' in kwdargs and kwdargs['background_rate']:
+            self.background_rate = float(kwdargs['background_rate'])
+        else:
+            self.background_rate = 0.
+            
         self.result_data = None
         self.force_stop = False
         
@@ -70,8 +111,12 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         """ Determine if two populations are equal, accounting for floating point issues
         
         Parameters:
-            last -- one of the populations
-            this -- the other population
+            
+            last
+              one of the populations
+            
+            this
+              the other population
         
         """
         
@@ -81,7 +126,9 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         """ Step one population to the next generation
         
         Parameters:
-            pop -- The population to send to the next generation
+            
+            pop
+              The population to send to the next generation
         
         """
         # x_i(t+1) = (a + u(e^i, x(t)))*x_i(t) / (a + u(x(t), x(t)))
@@ -111,7 +158,9 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         """ Actually run the simulation
         
         Parameters:
-            initial_pop -- (optional) initial population. Randomizes if not provided.
+            
+            initial_pop
+              (optional) initial population. Randomizes if not provided.
         
         """
         
@@ -142,8 +191,12 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         """ You should implement this method.
         
         Parameters:
-            my_place -- which place of the types the payoff is being calculated for
-            profile -- the strategy profile that is being played (tuple of integers)
+            
+            my_place
+              which place of the types the payoff is being calculated for
+            
+            profile
+              the strategy profile that is being played (tuple of integers)
         
         """
         
@@ -153,32 +206,64 @@ class NPopDiscreteReplicatorDynamics(Simulation):
     """ Implements an abstract discrete-time replicator dynamics
     
     Methods to Implement:
-        _interaction -- Returns the payoff for types
         
-    Values to Implement:
-        types -- A list of lists of names for the possible types (used to calculate dimensionality of each population and number of populations)
-        background_rate -- The natural rate of reproduction (parameter in the dynamics)
+        _interaction
+          Returns the payoff for types
         
     Events:
-        generation -- emitted when a generation is complete (self, generation_number, new_gen, old_gen)
-        initial set -- emitted when the initial population is set up (self, initial_pop)
-        stable state -- emitted when a stable state is reached (self, generation_count, final_pop, prev_pop, initial_pop)
+        
+        force stop
+          emitted when the generation iteration is broken by a forced stop condition (instead of stable state event)
+          
+        generation
+          emitted when a generation is complete (self, generation_number, new_gen, old_gen)
+        
+        initial set
+          emitted when the initial population is set up (self, initial_pop)
+        
+        stable state
+          emitted when a stable state is reached (self, generation_count, final_pop, prev_pop, initial_pop)
     
     """
-
-    effective_zero = 1e-10
-    types = [
-        ['A','B'], 
-        ['C','D']
-    ]
-    background_rate = 0.
     
     def __init__(self, *args, **kwdargs):
-        """ Checks for default_handlers kwdargs parameter and then delegates to the parent.
+        """ Checks for kwdargs parameters and then delegates to the parent.
+        
+        Keyword Parameters:
+            
+            effective_zero
+              The effective zero value for floating-point comparisons (default 1e-10)
+            
+            types
+              A list of names for the possible types (used to calculate dimensionality, default ['A','B'])
+            
+            background_rate
+              The natural rate of reproduction (parameter in the dynamics, default 0.)
+            
+            default_handlers
+              Flag to use the default event handlers (default True)
         
         """
         
         super(NPopDiscreteReplicatorDynamics, self).__init__(*args, **kwdargs)
+        
+        if 'effective_zero' in kwdargs and kwdargs['effective_zero']:
+            self.effective_zero = float(kwdargs['effective_zero'])
+        else:
+            self.effective_zero = 1e-10
+            
+        if 'types' in kwdargs and kwdargs['types']:
+            self.types = kwdargs['types']
+        else:  
+            self.types = [
+                ['A','B'], 
+                ['C','D']
+            ]
+            
+        if 'background_rate' in kwdargs and kwdargs['background_rate']:
+            self.background_rate = float(kwdargs['background_rate'])
+        else:
+            self.background_rate = 0.
         
         self.result_data = None
         self.force_stop = False
@@ -201,8 +286,12 @@ class NPopDiscreteReplicatorDynamics(Simulation):
         """ Determine if two populations of the same type are equal or not, accounting for floating point issues
         
         Parameters:
-            last -- one of the populations
-            this -- the other population
+            
+            last
+              one of the populations
+            
+            this
+              the other population
         
         """
         return not any(abs(i - j) >= self.effective_zero for i, j in itertools.izip(last, this))
@@ -211,8 +300,12 @@ class NPopDiscreteReplicatorDynamics(Simulation):
         """ Determine if two lists of populations are equal or not, accounting for floating point issues
         
         Parameters:
-            last -- one of the lists of populations
-            this -- the other list of populations
+            
+            last
+              one of the lists of populations
+            
+            this
+              the other list of populations
         
         """
         return all(self._indiv_pop_equals(i, j) for i, j in itertools.izip(last, this))
@@ -221,7 +314,9 @@ class NPopDiscreteReplicatorDynamics(Simulation):
         """ Step one list of populations to the next generation
         
         Parameters:
-            pop -- The list of populations to send to the next generation
+            
+            pop
+              The list of populations to send to the next generation
         
         """
         # x_i(t+1) = (a + u(e^i, x(t)))*x_i(t) / (a + u(x(t), x(t)))
@@ -261,7 +356,9 @@ class NPopDiscreteReplicatorDynamics(Simulation):
         """ Actually run the simulation
         
         Parameters:
-            initial_pop -- (optional) initial population. Randomizes if not provided.
+            
+            initial_pop
+              (optional) initial population. Randomizes if not provided.
         
         """
         
@@ -292,8 +389,12 @@ class NPopDiscreteReplicatorDynamics(Simulation):
         """ You should implement this method.
         
         Parameters:
-            my_place -- which place of the types the payoff is being calculated for
-            profile -- the profile of strategies being played (tuple of integers)
+            
+            my_place
+              which place of the types the payoff is being calculated for
+            
+            profile
+              the profile of strategies being played (tuple of integers)
         
         """
         
