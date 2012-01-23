@@ -128,6 +128,20 @@ class TestNPopDiscreteReplicatorDynamics:
                 assert abs(math.fsum(randpop[k]) - 1.) < 1e-10
         except AttributeError:
             assert False, "_random_population is not defined"
+
+class TestDiscreteReplicatorCustomization:
+    
+    def setUp(self):
+        pass
+    
+    def tearDown(self):
+        pass
+    
+    def test_config(self):
+        sim = dr.NPopDiscreteReplicatorDynamics({}, 1, False, types=[['C','D'],['C','D']], effective_zero=1e-11, background_rate=1e-6)
+        assert_equal(sim.types, [['C','D'],['C','D']])
+        assert_equal(sim.effective_zero, 1e-11)
+        assert_equal(sim.background_rate, 1e-6)
             
 class TestNPopDiscreteReplicatorInstance:
     

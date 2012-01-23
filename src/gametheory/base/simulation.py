@@ -1,8 +1,12 @@
 """ Handle the basics of running parallel simulations
 
 Classes:
-    Simulation -- Framework for a basic simulation
-    SimulationBatch -- Handles option parsing and a multiprocessing pool for simulations
+    
+    Simulation
+      Framework for a basic simulation
+    
+    SimulationBatch
+      Handles option parsing and a multiprocessing pool for simulations
 
 """
 
@@ -23,20 +27,40 @@ class SimulationBatch(EventEmitter):
     """ Handles option parsing and a multiprocessing pool for simulations
 
     Public Methods:
-        go -- Kick off the batch of simulations
+        
+        go
+          Kick off the batch of simulations
 
     Methods to Implement:
-        _add_listeners -- Set up event listeners for run events
+        
+        _add_listeners
+          Set up event listeners for run events
         
     Events (all handlers are called with self as the first parameter):
-        done -- emitted when results are totally done (replaces _when_done)
-        go -- emitted when the go method is called
-        made output_dir -- emitted if/when the output directory needs to be created
-        oparser set up -- emitted after the OptionParser is set up and able to add options
-        options parsed -- emitted after the OptionParser has parsed arguments
-        pool started -- emitted after the multiprocessing pool is set up
-        result -- emitted when a result is complete (passes self and the result as parameters)
-        start -- emitted just before the pool imap_unordered is called
+        
+        done
+          emitted when results are totally done (replaces _when_done)
+        
+        go
+          emitted when the go method is called
+        
+        made output_dir
+          emitted if/when the output directory needs to be created
+        
+        oparser set up
+          emitted after the OptionParser is set up and able to add options
+        
+        options parsed
+          emitted after the OptionParser has parsed arguments
+        
+        pool started
+          emitted after the multiprocessing pool is set up
+        
+        result
+          emitted when a result is complete (passes self and the result as parameters)
+        
+        start
+          emitted just before the pool imap_unordered is called
 
     """
 
@@ -44,12 +68,20 @@ class SimulationBatch(EventEmitter):
         """ Set up the simulation batch handler
 
         Parameters:
-            simulation_class -- The class representing the simulation to run
-            default_handlers -- Flag to set default event handlers for some events (default True)
+            
+            simulation_class
+              The class representing the simulation to run
+            
+            default_handlers
+              Flag to set default event handlers for some events (default True)
         
         Keyword Parameters:
-            option_error_handler -- An error handler for the option parser
-            option_exit_handler -- An exit handler for the option parser
+            
+            option_error_handler
+              An error handler for the option parser
+            
+            option_exit_handler
+              An exit handler for the option parser
 
         """
         
@@ -85,8 +117,12 @@ class SimulationBatch(EventEmitter):
         """ Verify options and run the batch of simulations
         
         Parameters:
-            option_args -- arguments to pass to the option parser. Defaults to sys.argv[1:].
-            option_values -- target of option parsing (probably should not use)
+            
+            option_args
+              arguments to pass to the option parser. Defaults to sys.argv[1:].
+            
+            option_values
+              target of option parsing (probably should not use)
             
         """
 
@@ -126,9 +162,15 @@ class SimulationBatch(EventEmitter):
             """ The pp task callback to handle finished simulations as they come in
             
             Parameters:
-                this -- a reference to self
-                out -- the file-like object to which to print data
-                result -- the result object returned by the simulation
+                
+                this
+                  a reference to self
+                
+                out
+                  the file-like object to which to print data
+                
+                result
+                  the result object returned by the simulation
             
             """
             
@@ -161,15 +203,16 @@ class SimulationBatch(EventEmitter):
         """ Set up the basic OptionParser options
 
         Options:
-            -D | --nofiledump -- Do not dump individual simulation output
-            -F | --filename -- Format string for file name of individual duplication output
-            -N | --duplications -- Number of trials to run
-            -O | --output -- Directory to which to output the results
-            -P | --poolsize -- Number of simultaneous trials
-            -Q | --quiet -- Suppress all output except aggregate pickle dump
-            -S | --statsfile -- File name for aggregate, pickled output
-            --cluster -- List of cluster servers to use via parallelpython
-            --clustersecret -- Password to access the cluster servers
+            
+            -D | --nofiledump           Do not dump individual simulation output
+            -F | --filename=file        Format string for file name of individual duplication output
+            -N | --duplications=num     Number of trials to run
+            -O | --output=dir           Directory to which to output the results
+            -P | --poolsize=num         Number of simultaneous trials
+            -Q | --quiet                Suppress all output except aggregate pickle dump
+            -S | --statsfile=file       File name for aggregate, pickled output
+            --cluster                   List of cluster servers to use via parallelpython
+            --clustersecret             Password to access the cluster servers
 
         """
 
@@ -187,6 +230,7 @@ class SimulationBatch(EventEmitter):
         """ Verify the values passed to the base options
 
         Checks:
+            
             - Number of duplications is positive
 
         """
@@ -202,32 +246,53 @@ class SimulationBatch(EventEmitter):
         pass
 
 class Simulation(EventEmitter):
-
     """ Base class for an individual simulation
 
     Public Methods:
-        run -- Runs the simulation
-        set_output_file -- Sets the output file name
+        
+        run
+          Runs the simulation
+        
+        set_output_file
+          Sets the output file name
         
     Methods to Implement:
-        _add_listeners -- Set up listeners for various simulation events
-        _run -- Actual simulation functionality
+        
+        _add_listeners
+          Set up listeners for various simulation events
+        
+        _run
+          Actual simulation functionality
         
     Events (all handlers are called with self as the first parameter):
-        done -- emitted when the run is complete and results have been stored
-        outfile changed -- emitted when the outfile name has been changed by set_output_file
-        outfile error -- emitted when there was an error opening the output file
-        run -- emitted just before _run is called
+        
+        done 
+          emitted when the run is complete and results have been stored
+        
+        outfile changed
+          emitted when the outfile name has been changed by set_output_file
+        
+        outfile error
+          emitted when there was an error opening the output file
+        
+        run 
+          emitted just before _run is called
 
     """
 
-    def __init__(self, data, iteration, outfile):
+    def __init__(self, data, iteration, outfile, *args, **kwdargs):
         """ Sets up the simulation parameters
 
         Parameters:
-            data -- The data object created by the SimulationBatch
-            iteration -- The iteration number of the simulation
-            outfile -- The name of a file to which to dump output (or None, indicating stdout)
+            
+            data
+              The data object created by the SimulationBatch
+            
+            iteration
+              The iteration number of the simulation
+            
+            outfile
+              The name of a file to which to dump output (or None, indicating stdout)
 
         """
         
@@ -252,7 +317,9 @@ class Simulation(EventEmitter):
         """ Sets the name of the outfile
         
         Parameters:
-            fname -- The file name for the outfile (or None or False)
+            
+            fname
+              The file name for the outfile (or None or False)
             
         """
         

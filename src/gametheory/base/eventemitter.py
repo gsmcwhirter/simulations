@@ -1,7 +1,9 @@
 """ A port of the node.js EventEmitter functionality
 
 Classes:
+
     EventEmitter
+      implements the event emitter functionality
 
 """
 
@@ -12,13 +14,27 @@ class EventEmitter(object):
     """ Handles event emitting and listening
     
     Public Methods:
-        add_listener -- add a listener for an event
-        on -- alias for add_listener
-        emit -- trigger the listeners for an event
-        remove_listener -- remove a listener from an event
-        remove_all_listeners -- remove all listeners from an event
-        listeners -- get a copy of the listeners on an event
-        set_max_listeners -- set the maximum number of listeners for an event before warnings are issued (default: 10, None for no limit)
+        
+        add_listener
+          add a listener for an event
+        
+        on
+          alias for add_listener
+        
+        emit
+          trigger the listeners for an event
+        
+        remove_listener
+          remove a listener from an event
+        
+        remove_all_listeners
+          remove all listeners from an event
+        
+        listeners
+          get a copy of the listeners on an event
+        
+        set_max_listeners
+          set the maximum number of listeners for an event before warnings are issued (default: 10, None for no limit)
     
     """
     
@@ -34,7 +50,9 @@ class EventEmitter(object):
         """ Set the maximum number of listeners for each event.
         
         Parameters:
-            max_listeners -- the maximum number of listeners allowed (None for no limit)
+            
+            max_listeners
+              the maximum number of listeners allowed (None for no limit)
         
         """
         
@@ -46,8 +64,12 @@ class EventEmitter(object):
         """ Adds a listener to an event
         
         Parameters:
-            event -- the event to listen for
-            f -- the handler for the event (should be a function / callable)
+            
+            event
+              the event to listen for
+            
+            listener
+              the handler for the event (should be a function / callable)
         
         """
         
@@ -71,8 +93,12 @@ class EventEmitter(object):
         """ Add a listener, but only execute it the first time the event occurs, then remove it
         
         Parameters:
-            event -- the event to listen for
-            f -- the listener function / callable
+            
+            event
+              the event to listen for
+            
+            listener
+              the listener function / callable
         
         """
         
@@ -89,8 +115,12 @@ class EventEmitter(object):
         """ Remove a listener from an event
         
         Parameters:
-            event -- the event from which to remove it
-            f -- the handler to remove
+            
+            event
+              the event from which to remove it
+            
+            listener
+              the handler to remove
         
         """
         
@@ -105,7 +135,9 @@ class EventEmitter(object):
         """ Clears all listeners from an event
         
         Parameters:
-            event -- the event to clear listeners from
+            
+            event
+              the event to clear listeners from
         
         
         """
@@ -117,7 +149,9 @@ class EventEmitter(object):
         """ Gets a COPY of the list of listeners on an event
         
         Parameters:
-            event -- the event for which to lookup the listeners
+            
+            event
+              the event for which to lookup the listeners
         
         """
         return self._map[event][:]
@@ -126,9 +160,15 @@ class EventEmitter(object):
         """ Emit an event, triggering the handlers on it with certain arguments
         
         Parameters:
-            event -- the event to trigger
-            *args -- arguments to pass to the triggered listeners
-            **kwargs -- keyword arguments to pass to the triggered listeners
+            
+            event
+              the event to trigger
+            
+            args
+              arguments to pass to the triggered listeners
+            
+            kwargs
+              keyword arguments to pass to the triggered listeners
         
         """
         

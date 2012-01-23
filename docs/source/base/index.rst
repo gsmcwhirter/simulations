@@ -8,7 +8,8 @@ gametheory.base
 
     .. toctree::
         :maxdepth: 2
-        
+
+        dynamics/index        
         eventemitter
         handlers
         optionparser

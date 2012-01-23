@@ -1,7 +1,9 @@
 """ Provides utility functions for the framework
 
 Functions:
-    random_string -- generates a random string of characters
+    
+    random_string
+      generates a random string of characters
 
 """
 
@@ -12,8 +14,12 @@ def random_string(size=6, chars=string.ascii_uppercase + string.digits):
     """ Generates a random string of characters
     
     Parameters:
-        size -- the length of the string (default 6)
-        chars -- the list of characters to use in the generation
+        
+        size
+          the length of the string (default 6)
+          
+        chars
+            the list of characters to use in the generation
                     (default string.ascii_uppercase + string.digits)
     
     """

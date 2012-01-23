@@ -1,7 +1,9 @@
 """ Handle the parsing and aggregation of simulation results
 
 Classes:
-    StatsParser -- main statistics parsing class
+    
+    StatsParser
+      main statistics parsing class
 
 """
 
@@ -16,18 +18,34 @@ class StatsParser(EventEmitter):
     """ Base class for parsing result files.
     
     Public Methods:
-        go -- Kick off parsing the results
+        
+        go
+          Kick off parsing the results
         
     Methods to Implement:
-        _add_listeners -- Add listeners for various parsing events
+        
+        _add_listeners
+          Add listeners for various parsing events
         
     Events (all handlers are called with self as the first parameter):
-        done -- emitted when results are totally done (replaces _when_done)
-        go -- emitted when the go method is called
-        oparser set up -- emitted after the OptionParser is set up and able to add options
-        options parsed -- emitted after the OptionParser has parsed arguments
-        result -- emitted for a result with parameters (self, out, duplication, result)
-        result options -- emitted for the result options with parameters (self, out, options) 
+        
+        done
+          emitted when results are totally done (replaces _when_done)
+          
+        go
+          emitted when the go method is called
+        
+        oparser set up
+          emitted after the OptionParser is set up and able to add options
+          
+        options parsed
+          emitted after the OptionParser has parsed arguments
+        
+        result
+          emitted for a result with parameters (self, out, duplication, result)
+        
+        result options
+          emitted for the result options with parameters (self, out, options) 
         
     """
 
@@ -35,10 +53,15 @@ class StatsParser(EventEmitter):
         """ Sets up the parsing aparatus
         
         Keyword Parameters:
-            option_error_handler -- An error handler for the option parser
-            option_exit_handler -- An exit handler for the option parser
+            
+            option_error_handler
+              An error handler for the option parser
+            
+            option_exit_handler
+              An exit handler for the option parser
         
         """
+        
         super(StatsParser, self).__init__()
         
         self.options = None
@@ -61,8 +84,12 @@ class StatsParser(EventEmitter):
         """ Pass off the parsing of the results file after some data manipulation
         
         Parameters:
-            option_args -- arguments to pass to the option parser. Defaults to sys.argv[1:].
-            option_values -- target of option parsing (probably should not use)
+            
+            option_args
+              arguments to pass to the option parser. Defaults to sys.argv[1:].
+            
+            option_values
+              target of option parsing (probably should not use)
         
         """
 
@@ -98,8 +125,12 @@ class StatsParser(EventEmitter):
         """ Actually parses the data
         
         Parameters:
-            statsfile -- a file object for the file to parse
-            out -- the output target (either a file object or sys.stdout)
+            
+            statsfile
+              a file object for the file to parse
+
+            out
+              the output target (either a file object or sys.stdout)
         
         """
         
@@ -142,9 +173,10 @@ class StatsParser(EventEmitter):
         """ Set up the basic OptionParser options
 
         Options:
-            -F | --statsfile -- File name of the results file
-            -O | --outfile -- File to which to print data
-            -V | --verbose -- Print detailed output to stdout as things are processed
+            
+            -F | --statsfile=file       File name of the results file
+            -O | --outfile=file         File to which to print data
+            -V | --verbose              Print detailed output to stdout as things are processed
 
         """
 
@@ -154,6 +186,7 @@ class StatsParser(EventEmitter):
 
     def _check_base_options(self):
         """ Verify the values passed to the base options
+        
         Checks:
 
             - Stats file exists

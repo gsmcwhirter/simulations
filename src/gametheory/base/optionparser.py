@@ -1,7 +1,9 @@
 """ An extension of optparse.OptionParser that has custom error and exit handling
 
 Classes:
-    OptionParser -- the extension class
+    
+    OptionParser
+      the extension class
 
 """
 
@@ -11,8 +13,12 @@ class OptionParser(optparse.OptionParser):
     """ Overrides the error() and exit() methods to allow prevention of auto-exit
         
     New Methods:
-        set_error_handler -- sets an error handler instead of the default
-        set_exit_handler -- sets an exit handler instead of the default
+        
+        set_error_handler
+          sets an error handler instead of the default
+        
+        set_exit_handler
+          sets an exit handler instead of the default
         
     """
     
@@ -26,7 +32,9 @@ class OptionParser(optparse.OptionParser):
         """ Sets an error handling function
         
         Parameters:
-            handler -- A function that takes an error message and does something with it.
+            
+            handler
+              A function that takes an error message and does something with it.
         
         """
         
@@ -36,7 +44,9 @@ class OptionParser(optparse.OptionParser):
         """ Sets an exit handling function
         
         Parameters:
-            handler -- A function that takes an exit code and error message and does something with it.
+            
+            handler
+              A function that takes an exit code and error message and does something with it.
         
         """
         
@@ -46,7 +56,9 @@ class OptionParser(optparse.OptionParser):
         """ Declares a user-defined error has occurred.
         
         Parameters:
-            msg -- The error message string
+            
+            msg
+              The error message string
             
         """
         
@@ -60,8 +72,12 @@ class OptionParser(optparse.OptionParser):
         """ Exits the parser/program (the default calls sys.exit). Often called by OptionParser.error().
         
         Parameters:
-            code -- The exit code
-            msg -- The error message
+            
+            code
+              The exit code
+            
+            msg
+              The error message
         
         """
         

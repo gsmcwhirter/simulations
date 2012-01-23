@@ -7,7 +7,8 @@ setup (
     version = '0.3.4',
     packages = [
         'gametheory',
-        'gametheory.base'
+        'gametheory.base',
+        'gametheory.base.dynamics'
     ],
     package_dir = {
         '': 'src',
