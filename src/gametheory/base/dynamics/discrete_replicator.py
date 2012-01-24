@@ -67,12 +67,14 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         
         """
         
-        super(OnePopDiscreteReplicatorDynamics, self).__init__(*args, **kwdargs)
+        Simulation.__init__(self, *args, **kwdargs)
         
         if 'effective_zero' in kwdargs and kwdargs['effective_zero']:
             self.effective_zero = float(kwdargs['effective_zero'])
         else:
             self.effective_zero = 1e-10
+            
+        print >> self.out, self.effective_zero
             
         if 'types' in kwdargs and kwdargs['types']:
             self.types = kwdargs['types']
@@ -93,10 +95,17 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         self.force_stop = False
         
         if 'default_handlers' not in kwdargs or kwdargs['default_handlers']:
+            self.use_default_handlers = True
+        else:
+            self.use_default_handlers = False
+            
+        if self.use_default_handlers:
             self.on('initial set', drep_initial_set_handler)
             self.on('generation', drep_generation_report_handler)
             self.on('stable state', drep_stable_state_handler)
             self.on('force stop', drep_stable_state_handler)
+        else:
+            print >> self.out, "Ignoring default handlers"
     
     def _random_population(self):
         """ Generate a random population on the unit simplex of appropriate dimensionality
@@ -245,7 +254,7 @@ class NPopDiscreteReplicatorDynamics(Simulation):
         
         """
         
-        super(NPopDiscreteReplicatorDynamics, self).__init__(*args, **kwdargs)
+        Simulation.__init__(self, *args, **kwdargs)
         
         if 'effective_zero' in kwdargs and kwdargs['effective_zero']:
             self.effective_zero = float(kwdargs['effective_zero'])
