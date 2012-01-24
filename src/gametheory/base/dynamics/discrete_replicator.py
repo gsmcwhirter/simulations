@@ -95,17 +95,10 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         self.force_stop = False
         
         if 'default_handlers' not in kwdargs or kwdargs['default_handlers']:
-            self.use_default_handlers = True
-        else:
-            self.use_default_handlers = False
-            
-        if self.use_default_handlers:
             self.on('initial set', drep_initial_set_handler)
             self.on('generation', drep_generation_report_handler)
             self.on('stable state', drep_stable_state_handler)
             self.on('force stop', drep_stable_state_handler)
-        else:
-            print >> self.out, "Ignoring default handlers"
     
     def _random_population(self):
         """ Generate a random population on the unit simplex of appropriate dimensionality
