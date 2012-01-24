@@ -62,7 +62,7 @@ class StatsParser(EventEmitter):
         
         """
         
-        super(StatsParser, self).__init__()
+        EventEmitter.__init__(self)
         
         self.options = None
         self._args = None

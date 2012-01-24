@@ -64,7 +64,7 @@ class SimulationBatch(EventEmitter):
 
     """
 
-    def __init__(self, simulation_class, default_handlers=True, **kwdargs):
+    def __init__(self, simulation_class, *args, **kwdargs):
         """ Set up the simulation batch handler
 
         Parameters:
@@ -85,7 +85,7 @@ class SimulationBatch(EventEmitter):
 
         """
         
-        super(SimulationBatch, self).__init__()
+        EventEmitter.__init__(self)
         
         self.options = None
         self.args = None
@@ -95,7 +95,7 @@ class SimulationBatch(EventEmitter):
         self.finished_count = 0
         self.identifier = random_string()
         
-        if default_handlers: 
+        if 'default_handlers' not in kwdargs or kwdargs['default_handlers']: 
             self.on('pool started', simbatch_default_pool_handler)
             self.on('start', simbatch_default_start_handler)
             self.on('result', simbatch_default_result_handler)
@@ -296,7 +296,7 @@ class Simulation(EventEmitter):
 
         """
         
-        super(Simulation, self).__init__()
+        EventEmitter.__init__(self)
 
         self.data = data
         self.num = iteration

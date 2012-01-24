@@ -67,12 +67,14 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         
         """
         
-        super(OnePopDiscreteReplicatorDynamics, self).__init__(*args, **kwdargs)
+        Simulation.__init__(self, *args, **kwdargs)
         
         if 'effective_zero' in kwdargs and kwdargs['effective_zero']:
             self.effective_zero = float(kwdargs['effective_zero'])
         else:
             self.effective_zero = 1e-10
+            
+        print >> self.out, self.effective_zero
             
         if 'types' in kwdargs and kwdargs['types']:
             self.types = kwdargs['types']
@@ -245,7 +247,7 @@ class NPopDiscreteReplicatorDynamics(Simulation):
         
         """
         
-        super(NPopDiscreteReplicatorDynamics, self).__init__(*args, **kwdargs)
+        Simulation.__init__(self, *args, **kwdargs)
         
         if 'effective_zero' in kwdargs and kwdargs['effective_zero']:
             self.effective_zero = float(kwdargs['effective_zero'])
