@@ -7,7 +7,7 @@ from setuptools import setup
 
 setup (
     name = 'gametheory.base',
-    version = '0.3.6',
+    version = '0.3.7',
     packages = [
         'gametheory',
         'gametheory.base',
