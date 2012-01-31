@@ -1,16 +1,15 @@
-import gametheory.base.simulation as simulation
+import simulations.simulation as simulation
+import simulations.simulation_runner as simrunner
 
 import cPickle
-import gametheory.base.simulation_runner as simrunner
 import os
 import random
 import re
 import string
 import subprocess
 import sys
-import time
 
-from gametheory.base.optionparser import OptionParser
+from simulations.utils.optionparser import OptionParser
 from nose.tools import assert_equal
 from nose.tools import assert_raises
 
@@ -33,7 +32,7 @@ class Sim2(simulation.Simulation):
 #        time.sleep(5)
 #        raise KeyboardInterrupt
 
-class Batch(simulation.SimulationBatch):
+class Batch(simrunner.SimulationRunner):
     
     def _add_listeners(self):
         self.on('oparser set up', self._set_options)

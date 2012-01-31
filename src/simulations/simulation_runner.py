@@ -1,29 +1,36 @@
-""" Handle the basics of running parallel simulations
+""" Handler for running simulations in a multiprocessing environment
 
 Classes:
     
-    Simulation
-      Framework for a basic simulation
+    SimulationRunner
+      Handles option parsing and a pp server pool for simulations
+
+Functions:
     
-    SimulationBatch
-      Handles option parsing and a multiprocessing pool for simulations
+    default_pool_started_handler
+      Default handler for 'pool started' events
+    
+    default_start_handler
+      Default handler for 'start' events
+      
+    default_result_handler
+      Default handler for 'result' events
+    
+    run_simulation
+      runs a simulation task
 
 """
 
 import cPickle
-import gametheory.base.simulation_runner as simrunner
 import os
 import pp
 import sys
 
-from gametheory.base.eventemitter import EventEmitter
-from gametheory.base.handlers import simbatch_default_result_handler
-from gametheory.base.handlers import simbatch_default_pool_handler
-from gametheory.base.handlers import simbatch_default_start_handler
-from gametheory.base.optionparser import OptionParser
-from gametheory.base.util import random_string
+from simulations.utils.eventemitter import EventEmitter
+from simulations.utils.optionparser import OptionParser
+from simulations.utils.functions import random_string
 
-class SimulationBatch(EventEmitter):
+class SimulationRunner(EventEmitter):
     """ Handles option parsing and a multiprocessing pool for simulations
 
     Public Methods:
@@ -96,9 +103,9 @@ class SimulationBatch(EventEmitter):
         self.identifier = random_string()
         
         if 'default_handlers' not in kwdargs or kwdargs['default_handlers']: 
-            self.on('pool started', simbatch_default_pool_handler)
-            self.on('start', simbatch_default_start_handler)
-            self.on('result', simbatch_default_result_handler)
+            self.on('pool started', default_pool_handler)
+            self.on('start', default_start_handler)
+            self.on('result', default_result_handler)
         
         self._add_listeners()
 
@@ -185,7 +192,7 @@ class SimulationBatch(EventEmitter):
             print >> stats, cPickle.dumps(self.options)
             print >> stats
             
-            job_template = pp.Template(pool, simrunner.run_simulation, callback=finish_run, callbackargs=(self, stats), group=self.identifier)
+            job_template = pp.Template(pool, run_simulation, callback=finish_run, callbackargs=(self, stats), group=self.identifier)
             
             for task in tasks:
                 job_template.submit(task)
@@ -245,136 +252,82 @@ class SimulationBatch(EventEmitter):
         
         pass
 
-class Simulation(EventEmitter):
-    """ Base class for an individual simulation
-
-    Public Methods:
+def run_simulation(task):
+    """ A simple function to run the simulation. Used with the multiprocessing pool.
+    
+    Parameters:
         
-        run
-          Runs the simulation
+        task
+          a list/tuple whose first element is a Simulation class and the rest
+          of whose elements are parameters for __init__
         
-        set_output_file
-          Sets the output file name
-        
-    Methods to Implement:
-        
-        _add_listeners
-          Set up listeners for various simulation events
-        
-        _run
-          Actual simulation functionality
-        
-    Events (all handlers are called with self as the first parameter):
-        
-        done 
-          emitted when the run is complete and results have been stored
-        
-        outfile changed
-          emitted when the outfile name has been changed by set_output_file
-        
-        outfile error
-          emitted when there was an error opening the output file
-        
-        run 
-          emitted just before _run is called
-
     """
-
-    def __init__(self, data, iteration, outfile, *args, **kwdargs):
-        """ Sets up the simulation parameters
-
-        Parameters:
-            
-            data
-              The data object created by the SimulationBatch
-            
-            iteration
-              The iteration number of the simulation
-            
-            outfile
-              The name of a file to which to dump output (or None, indicating stdout)
-
-        """
-        
-        EventEmitter.__init__(self)
-
-        self.data = data
-        self.num = iteration
-        self.outfile = None
-        self.out = None
-        self.out_opened = False
-        self.result = None
-        
-        self.on('run', self.open_out_fd)
-        self.on('done', self.close_out_fd)
-        self.on('outfile changed', self.open_out_fd)
-        
-        self._add_listeners()
-        
-        self.set_output_file(outfile)
-        
-    def set_output_file(self, fname):
-        """ Sets the name of the outfile
-        
-        Parameters:
-            
-            fname
-              The file name for the outfile (or None or False)
-            
-        """
-        
-        self.outfile = fname
-        self.emit('outfile changed', self)
-        
-    @staticmethod
-    def open_out_fd(this):
-        """ Opens the self._out object that simulations should print to
-        
-        """
-        
-        if this.out_opened:
-            this.close_out_fd(this)
-            
-        if this.outfile is None:
-            this.out = sys.stdout
-        elif this.outfile:
-            this.out = open(this.outfile, "w")
-            this.out_opened = True
-        else:
-            this.out_opened = True
-            this.out = open(os.devnull, "w")
-            
-    @staticmethod
-    def close_out_fd(this):
-        """ Closes the self._out object that simulations should print to
-        
-        """
-        
-        if this.out_opened:
-            this.out.close()
-            this.out_opened = False
-            
-        this.out = None
-
-    def run(self):
-        """ Runs the simulation. Handles opening and closing the self._out file object.
-        
-        """
-        
-        self.emit('run', self)
-        self.result = self._run()
-        self.emit('done', self)
-        return self.result
     
-    def _add_listeners(self):
-        """ Set up listeners for various events (should implement)
-        
-        """
-        
-        pass
+    klass = task.pop(0)
+    sim = klass(*task)
     
-    def _run(self):
-        """ Actual functionality for running the simulation (should implement)
+    return sim.run()
+
+def default_result_handler(this, result, out=None):
+    """ Default handler for the 'result' event
+    
+    Parameters:
         
-        """
-        pass
+        this
+          a reference to the simulation batch
+          
+        result 
+          the result object
+          
+        out
+          the file descriptor to print to
+    
+    """
+    
+    if out is None:
+        out = sys.stdout
+    
+    if not this.options.quiet:
+        print >> out, result
+        print >> out, "done #{0}".format(this.finished_count)
+        
+def default_pool_handler(this, pool, out=None):
+    """ Default handler for the 'pool started' event
+    
+    Parameters:
+        
+        this
+          a reference to the simulation batch
+          
+        pool 
+          the pool that was started
+          
+        out
+          the file descriptor to print to
+    
+    """
+    
+    if out is None:
+        out = sys.stdout
+    
+    if not this.options.quiet:
+        print >> out, "Pool Started: {0} workers".format(pool.get_ncpus())
+        
+def default_start_handler(this, out=None):
+    """ Default handler for the 'start' event
+    
+    Parameters:
+        
+        this
+          a reference to the simulation batch
+          
+        out
+          the file descriptor to print to
+    
+    """
+    
+    if out is None:
+        out = sys.stdout
+    
+    if not this.options.quiet:
+        print >> out, "Running {0} duplications.".format(this.options.dup)

@@ -11,8 +11,8 @@ import cPickle
 import os
 import sys
 
-from gametheory.base.eventemitter import EventEmitter
-from gametheory.base.optionparser import OptionParser
+from simulations.utils.eventemitter import EventEmitter
+from simulations.utils.optionparser import OptionParser
 
 class StatsParser(EventEmitter):
     """ Base class for parsing result files.
