@@ -6,12 +6,12 @@ use_setuptools()
 from setuptools import setup
 
 setup (
-    name = 'gametheory.base',
+    name = 'simulations',
     version = '0.3.7',
     packages = [
-        'gametheory',
-        'gametheory.base',
-        'gametheory.base.dynamics'
+        'simulations',
+        'simulations.utils',
+        'simulations.dynamics'
     ],
     package_dir = {
         '': 'src',

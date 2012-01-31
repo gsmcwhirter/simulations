@@ -2,15 +2,6 @@
 
 Modules:
     
-    eventemitter
-      Implement an EventEmitter model
-    
-    handlers
-      Contains default handlers for various events
-    
-    optionparser
-      Extends optparse.OptionParser to add error and exit handlers
-    
     simulation
       Handles defining simulations
     
@@ -19,13 +10,13 @@ Modules:
     
     statsparser
       Handles analyzing simulation output
-    
-    util
-      Has utility functions for use in the framework
 
 Packages:
     
     dynamics
       Base implementations of various dynamics
+      
+    utils
+      Has utility modules
 
 """
