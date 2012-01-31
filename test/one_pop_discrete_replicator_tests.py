@@ -1,5 +1,5 @@
-import gametheory.base.dynamics.discrete_replicator as dr
-import gametheory.base.simulation as simulation
+import simulations.dynamics.onepop_discrete_replicator as dr
+import simulations.simulation as simulation
 import math
 
 from nose.tools import assert_equal

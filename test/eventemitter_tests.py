@@ -1,4 +1,4 @@
-from gametheory.base.eventemitter import EventEmitter
+from simulations.utils.eventemitter import EventEmitter
 
 from nose.tools import assert_equal
 

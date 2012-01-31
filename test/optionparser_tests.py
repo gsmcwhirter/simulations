@@ -1,4 +1,4 @@
-from gametheory.base.optionparser import OptionParser
+from simulations.utils.optionparser import OptionParser
 
 from nose.tools import assert_equal
 from nose.tools import assert_raises

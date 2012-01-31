@@ -1,12 +1,12 @@
-import gametheory.base.simulation as simulation
-import gametheory.base.statsparser as stats
+import simulations.simulation as simulation
+import simulations.simulation_runner as simrunner
+import simulations.statsparser as stats
 
 import os
 import random
 import string
-import sys
 
-from gametheory.base.optionparser import OptionParser
+from simulations.utils.optionparser import OptionParser
 from nose.tools import assert_equal
 from nose.tools import assert_raises
 
@@ -59,7 +59,7 @@ class TestStatsParser:
     
     def setUp(self):
         self.stats = StatsParser()
-        self.batch = simulation.SimulationBatch(Sim)
+        self.batch = simrunner.SimulationRunner(Sim)
         self.dir = "/tmp/" + filename_generator(8)
         
         try:
