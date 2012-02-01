@@ -7,7 +7,7 @@ from setuptools import setup
 
 setup(
     name='simulations',
-    version='0.3.8',
+    version='0.4.0',
     packages=[
         'simulations',
         'simulations.utils',
