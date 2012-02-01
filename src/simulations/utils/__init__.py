@@ -5,6 +5,10 @@ Modules:
     eventemitter
       Implement an EventEmitter model
 
+    fake_server
+      Implements a fake pp-like server interface for running things
+      one-at-a-time
+
     functions
       Contains utility functions
 

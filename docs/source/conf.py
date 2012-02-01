@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# gametheory.base documentation build configuration file, created by
+# simulations documentation build configuration file, created by
 # sphinx-quickstart on Sat Jan 21 15:35:34 2012.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -11,7 +11,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+import os
+import sys
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -26,7 +27,12 @@ sys.path.insert(0, os.path.abspath('../../src'))
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.todo', 'sphinx.ext.coverage', 'sphinx.ext.mathjax', 'sphinx.ext.viewcode']
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.doctest',
+              'sphinx.ext.todo',
+              'sphinx.ext.coverage',
+              'sphinx.ext.mathjax',
+              'sphinx.ext.viewcode']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -165,7 +171,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'gametheorybasedoc'
+htmlhelp_basename = 'simulationsdoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -184,7 +190,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'gametheorybase.tex', u'gametheory.base Documentation',
+  ('index', 'simulations.tex', u'simulations Documentation',
    u'Gregory McWhirter', 'manual'),
 ]
 
@@ -214,7 +220,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'gametheorybase', u'gametheory.base Documentation',
+    ('index', 'simulations', u'simulations Documentation',
      [u'Gregory McWhirter'], 1)
 ]
 
@@ -228,8 +234,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'gametheorybase', u'gametheory.base Documentation',
-   u'Gregory McWhirter', 'gametheorybase', 'One line description of project.',
+  ('index', 'simulations', u'simulations Documentation',
+   u'Gregory McWhirter', 'simulations', 'One line description of project.',
    'Miscellaneous'),
 ]
 

@@ -1,15 +1,19 @@
-.. gametheory.base documentation
+.. simulations
 
-Welcome to gametheory.base's documentation!
-===========================================
+simulations
+===============
 
-Contents:
+.. automodule:: simulations
+    :members:
 
-.. toctree::
-    :maxdepth: 2
+    .. toctree::
+        :maxdepth: 2
 
-    base/index
-
+        dynamics/index
+        simulation
+        simulation_runner
+        statsparser
+        utils/index
 
 Indices and tables
 ==================
@@ -17,4 +21,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
