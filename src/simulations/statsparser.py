@@ -11,11 +11,12 @@ import cPickle
 import os
 import sys
 
-from simulations.utils.eventemitter import EventEmitter
-from simulations.utils.optionparser import OptionParser
+from simulations.base import Base
+from simulations.base import withoptions
 
 
-class StatsParser(EventEmitter):
+@withoptions
+class StatsParser(Base):
     """ Base class for parsing result files.
 
     Public Methods:
@@ -50,7 +51,7 @@ class StatsParser(EventEmitter):
 
     """
 
-    def __init__(self, **kwdargs):
+    def __init__(self, *args, **kwdargs):
         """ Sets up the parsing aparatus
 
         Keyword Parameters:
@@ -63,23 +64,7 @@ class StatsParser(EventEmitter):
 
         """
 
-        EventEmitter.__init__(self)
-
-        self.options = None
-        self._args = None
-
-        self._add_listeners()
-
-        self.oparser = OptionParser()
-        self._set_base_options()
-
-        if 'option_error_handler' in kwdargs:
-            self.oparser.set_error_handler(kwdargs['option_error_handler'])
-
-        if 'option_exit_handler' in kwdargs:
-            self.oparser.set_exit_handler(kwdargs['option_exit_handler'])
-
-        self.emit('oparser set up', self)
+        super(StatsParser, self).__init__(*args, **kwdargs)
 
     def go(self, option_args=None, option_values=None):
         """ Pass off the parsing of the results file after some data
@@ -97,7 +82,7 @@ class StatsParser(EventEmitter):
 
         self.emit('go', self)
 
-        (self.options, self._args) = self.oparser.parse_args(
+        (self.options, self.args) = self.oparser.parse_args(
                                         args=option_args,
                                         values=option_values
                                      )
@@ -114,18 +99,12 @@ class StatsParser(EventEmitter):
 
                 with open(self.options.out_file, "w") as out:
                     self._go(statsfile, out)
-                    if self.options.verbose:
-                        print "Executing _when_done handler..."
-
                     self.emit('done', self, out)
             else:
                 if self.options.verbose:
                     print "Sending output to stdout..."
 
                 self._go(statsfile, sys.stdout)
-                if self.options.verbose:
-                    print "Executing _when_done handler..."
-
                 self.emit('done', self, sys.stdout)
 
     def _go(self, statsfile, out):
@@ -220,10 +199,3 @@ class StatsParser(EventEmitter):
         file_exists = os.path.isfile(self.options.stats_file)
         if not self.options.stats_file or not file_exists:
             self.oparser.error("The stats file specified does not exist")
-
-    def _add_listeners(self):
-        """ Set up listeners for various events (should implement)
-
-        """
-
-        pass

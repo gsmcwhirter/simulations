@@ -19,12 +19,10 @@ import math
 import numpy.random as rand
 import operator
 
-from simulations.dynamics.handlers import initial_set_handler
-from simulations.dynamics.handlers import generation_report_handler
-from simulations.simulation import Simulation
+from simulations.dynamics.discrete_replicator import DiscreteReplicatorDynamics
 
 
-class OnePopDiscreteReplicatorDynamics(Simulation):
+class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
     """ Implements an abstract discrete-time replicator dynamics
 
     Methods to Implement:
@@ -77,38 +75,30 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
 
         """
 
-        Simulation.__init__(self, *args, **kwdargs)
-
-        if 'effective_zero' in kwdargs and kwdargs['effective_zero']:
-            self.effective_zero = float(kwdargs['effective_zero'])
-        else:
-            self.effective_zero = 1e-10
-
-        print >> self.out, self.effective_zero
-
-        if 'types' in kwdargs and kwdargs['types']:
-            self.types = kwdargs['types']
-        else:
-            self.types = ['A', 'B']
+        super(OnePopDiscreteReplicatorDynamics, self).__init__(*args, **kwdargs)
 
         if 'interaction_arity' in kwdargs and kwdargs['interaction_arity']:
             self.interaction_arity = int(kwdargs['interaction_arity'])
         else:
             self.interaction_arity = 2
 
-        if 'background_rate' in kwdargs and kwdargs['background_rate']:
-            self.background_rate = float(kwdargs['background_rate'])
-        else:
-            self.background_rate = 0.
+    def _add_default_listeners(self):
+        """ Sets up default event listeners
 
-        self.result_data = None
-        self.force_stop = False
+        """
 
-        if 'default_handlers' not in kwdargs or kwdargs['default_handlers']:
-            self.on('initial set', initial_set_handler)
-            self.on('generation', generation_report_handler)
-            self.on('stable state', stable_state_handler)
-            self.on('force stop', stable_state_handler)
+        super(OnePopDiscreteReplicatorDynamics, self)._add_default_listeners()
+
+        self.add_listener('stable state', stable_state_handler)
+        self.add_listener('force stop', stable_state_handler)
+
+    def _default_types(self):
+        """ Returns a default type object for the population(s)
+            (should implement)
+
+        """
+
+        return ['A', 'B']
 
     def _random_population(self):
         """ Generate a random population on the unit simplex of appropriate
@@ -119,6 +109,14 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
         rand.seed()
 
         return tuple(rand.dirichlet([1] * len(self.types)))
+
+    def _null_population(self):
+        """ Generates a population guaranteed to compare falsely with a random
+            population
+
+        """
+
+        return tuple([0.] * len(self.types))
 
     def _pop_equals(self, last, this):
         """ Determine if two populations are equal, accounting for floating
@@ -180,56 +178,6 @@ class OnePopDiscreteReplicatorDynamics(Simulation):
 
         return tuple(new_pop)
 
-    def _run(self, initial_pop=None):
-        """ Actually run the simulation
-
-        Parameters:
-
-            initial_pop
-              (optional) initial population. Randomizes if not provided.
-
-        """
-
-        if initial_pop is None:
-            initial_pop = self._random_population()
-
-        this_generation = initial_pop
-
-        self.emit('initial set', self, initial_pop)
-
-        last_generation = tuple([0.] * len(self.types))
-        generation_count = 0
-        while not self._pop_equals(last_generation, this_generation) and not self.force_stop:
-            generation_count += 1
-            last_generation = this_generation
-            this_generation = self._step_generation(last_generation)
-
-            self.emit('generation',
-                        self,
-                        generation_count,
-                        this_generation,
-                        last_generation)
-
-        if self.force_stop:
-            self.emit('force stop',
-                        self,
-                        generation_count,
-                        this_generation,
-                        last_generation,
-                        initial_pop)
-        else:
-            self.emit('stable state',
-                        self,
-                        generation_count,
-                        this_generation,
-                        last_generation,
-                        initial_pop)
-
-        return (generation_count,
-                initial_pop,
-                this_generation,
-                self.result_data)
-
     def _interaction(self, my_place, profile):
         """ You should implement this method.
 
@@ -268,13 +216,6 @@ def stable_state_handler(this, genct, thisgen, lastgen, firstgen):
 
     """
 
-    print >> this.out, "=" * 72
-    if this.force_stop:
-        fstr = "Force stop! ({0} generations)"
-    else:
-        fstr = "Stable state! ({0} generations)"
-
-    print >> this.out, fstr.format(genct)
     print >> this.out, "\t{0}".format(thisgen)
 
     fstr3 = "\t\t{0:>5}: {1:>20}: {2}"

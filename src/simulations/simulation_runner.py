@@ -26,13 +26,14 @@ import os
 import pp
 import sys
 
-from simulations.utils.eventemitter import EventEmitter
+from simulations.base import Base
+from simulations.base import withoptions
 from simulations.utils.fake_server import Server as FakeServer
-from simulations.utils.optionparser import OptionParser
 from simulations.utils.functions import random_string
 
 
-class SimulationRunner(EventEmitter):
+@withoptions
+class SimulationRunner(Base):
     """ Handles option parsing and a multiprocessing pool for simulations
 
     Public Methods:
@@ -95,35 +96,15 @@ class SimulationRunner(EventEmitter):
 
         """
 
-        EventEmitter.__init__(self)
+        super(SimulationRunner, self).__init__(*args, **kwdargs)
 
-        self.options = None
-        self.args = None
         self.data = {}
         self._task_dup_num = False
         self._simulation_class = simulation_class
         self.finished_count = 0
         self.identifier = random_string()
 
-        if 'default_handlers' not in kwdargs or kwdargs['default_handlers']:
-            self.on('pool started', default_pool_handler)
-            self.on('start', default_start_handler)
-            self.on('result', default_result_handler)
-
-        self._add_listeners()
-
-        self.oparser = OptionParser()
-
-        if 'option_error_handler' in kwdargs:
-            self.oparser.set_error_handler(kwdargs['option_error_handler'])
-
-        if 'option_exit_handler' in kwdargs:
-            self.oparser.set_exit_handler(kwdargs['option_exit_handler'])
-
-        self._set_base_options()
-        self.emit('oparser set up', self)
-
-    def go(self, option_args=None, option_values=None):
+    def go(self, **kwdargs):
         """ Verify options and run the batch of simulations
 
         Parameters:
@@ -137,6 +118,26 @@ class SimulationRunner(EventEmitter):
         """
 
         self.emit('go', self)
+
+        if 'option_args' in kwdargs:
+            option_args = kwdargs['option_args']
+        else:
+            option_args = None
+
+        if 'option_values' in kwdargs:
+            option_values = kwdargs['option_values']
+        else:
+            option_values = None
+
+        if 'pp_modules' in kwdargs:
+            pp_modules = kwdargs['pp_modules']
+        else:
+            pp_modules = ()
+
+        if 'pp_deps' in kwdargs:
+            pp_deps = kwdargs['pp_deps']
+        else:
+            pp_deps = ()
 
         (self.options, self.args) = self.oparser.parse_args(
                                         args=option_args,
@@ -217,6 +218,8 @@ class SimulationRunner(EventEmitter):
             job_template = pp.Template(pool, run_simulation,
                                              callback=finish_run,
                                              callbackargs=(self, stats),
+                                             depfuncs=pp_deps,
+                                             modules=pp_modules,
                                              group=self.identifier)
 
             for task in tasks:
@@ -300,12 +303,14 @@ class SimulationRunner(EventEmitter):
         elif self.options.pool_size < 0:
             self.oparser.error("Pool size must be non-negative")
 
-    def _add_listeners(self):
-        """ Set up listeners for various events (should implement)
+    def _add_default_listeners(self):
+        """ Sets up default listeners for various events
 
         """
 
-        pass
+        self.on('pool started', default_pool_handler)
+        self.on('start', default_start_handler)
+        self.on('result', default_result_handler)
 
 
 def run_simulation(task):

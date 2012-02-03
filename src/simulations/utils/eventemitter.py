@@ -5,6 +5,14 @@ Classes:
     EventEmitter
       implements the event emitter functionality
 
+Functions:
+
+    listener
+      A class decorator for adding listeners
+
+    once
+      A class decorator for adding once-only listeners
+
 """
 
 import collections
@@ -21,6 +29,9 @@ class EventEmitter(object):
 
         on
           alias for add_listener
+
+        once
+          adds a listener, but only executes it once, then it is removed
 
         emit
           trigger the listeners for an event

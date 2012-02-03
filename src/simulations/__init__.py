@@ -2,6 +2,9 @@
 
 Modules:
 
+    base
+      Handles generic set-up tasks for EventEmitter-derived classes
+
     simulation
       Handles defining simulations
 
