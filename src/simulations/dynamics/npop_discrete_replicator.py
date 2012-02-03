@@ -152,8 +152,6 @@ class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
         avg_payoffs = [None] * len(pop)
         num_types = [len(self.types[k]) for k in xrange(len(pop))]
 
-        print pop
-
         for k in xrange(len(pop)):
             payoffs[k] = [
                 math.fsum(
@@ -167,8 +165,6 @@ class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
                     ))
                 for i in xrange(num_types[k])
             ]
-
-            print payoffs[k]
 
             avg_payoffs[k] = math.fsum(payoffs[k][i] * float(pop[k][i])
                                         for i in xrange(num_types[k]))
