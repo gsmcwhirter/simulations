@@ -7,7 +7,12 @@ from setuptools import setup
 
 setup(
     name='simulations',
-    version='0.5.0',
+    version='0.5.1',
+    author='Gregory McWhirter',
+    author_email='gmcwhirt@uci.edu',
+    description='A framework for evolutionary game theory simulations',
+    url='https://www.github.com/gsmcwhirter/simulations',
+    license='MIT',
     packages=[
         'simulations',
         'simulations.utils',
@@ -17,16 +22,11 @@ setup(
         '': 'src',
     },
     install_requires=[
-        'distribute',
         'numpy>=1.5',
         'pp'
     ],
-    dependency_links=["https://www.ideafreemonoid.org/pip"],
-    test_suite='nose.collector',
-    tests_require=['nose'],
-    author='Gregory McWhirter',
-    author_email='gmcwhirt@uci.edu',
-    description='A framework for evolutionary game theory simulations',
-    url='https://www.github.com/gsmcwhirter/gametheory',
-    license='MIT'
+    tests_require=[
+        'nose>=1.0'
+    ],
+    test_suite='nose.collector'
 )
