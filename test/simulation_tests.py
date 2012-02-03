@@ -72,16 +72,16 @@ class TestSimulation:
         assert_equal(self.sim.outfile, "/tmp/test")
         assert self.sim.out is not None, "Sim.out is not set up"
 
-        self.sim.close_out_fd(self.sim)
+        simulation._close_out_fd(self.sim)
         assert self.sim.out is None, "Sim.out was not closed"
         assert_equal(self.sim.out_opened, False)
 
-        self.sim.open_out_fd(self.sim)
+        simulation._open_out_fd(self.sim)
         assert self.sim.out is not None, "Sim.out was not opened"
         assert_equal(self.sim.out_opened, True)
 
         self.sim.set_output_file("/tmp/test2")
-        self.sim.open_out_fd(self.sim)
+        simulation._open_out_fd(self.sim)
         assert self.sim.out is not None, "Sim.out was not opened"
         assert_equal(self.sim.out_opened, True)
 
@@ -154,7 +154,7 @@ class TestSimulationBatch:
 
     def test_batch_go(self):
         args = ["-F",  "iter_{0}.testout", "-N", "4", "-O", self.dir, "-S", "results.testout", "--test"]
-        assert self.batch.go(args) is None
+        assert self.batch.go(option_args=args) is None
         assert_equal(self.batch.options.test, True)
         assert_equal(self.batch.options.dup, 4)
         assert_equal(self.batch.options.output_dir, self.dir)
@@ -185,7 +185,7 @@ class TestSimulationBatch:
 
     def test_batch_go2(self):
         args = ["-N", "6", "-P", "1", "-O", self.dir, "-S", "results.testout", "-Q", "--test", "-D"]
-        assert self.batch.go(args) is None
+        assert self.batch.go(option_args=args) is None
         assert_equal(self.batch.options.test, True)
         assert_equal(self.batch.options.dup, 6)
         assert_equal(self.batch.options.output_dir, self.dir)
@@ -213,17 +213,17 @@ class TestSimulationBatch:
     def test_option_failure(self):
         args = ["-N", "-6", "-P", "2", "-O", self.dir, "-S", "results.testout", "-Q", "-D", "--test"]
 
-        assert_raises(SystemExit, self.batch.go, args)
+        assert_raises(SystemExit, self.batch.go, option_args=args)
 
     def test_option_failure2(self):
         args = ["-N", "6", "-P", "2", "-O", self.dir, "-S", "results.testout", "-Q", "-D"]
 
-        assert_raises(SystemExit, self.batch.go, args)
+        assert_raises(SystemExit, self.batch.go, option_args=args)
 
     def test_option_failure3(self):
         args = ["-N", "6", "-P", "-1", "-O", self.dir, "-S", "results.testout", "-Q", "-D", "--test"]
 
-        assert_raises(SystemExit, self.batch.go, args)
+        assert_raises(SystemExit, self.batch.go, option_args=args)
 
 class TestClustering:
 
@@ -246,7 +246,7 @@ class TestClustering:
 
     def test_batch_cluster_go(self):
         args = ["-F",  "iter_{0}.testout", "-N", "4", "-P", "2", "-O", self.dir, "-S", "results.testout", "--test", "--cluster=127.0.0.1", "--clustersecret="+self.secret]
-        assert self.batch.go(args) is None
+        assert self.batch.go(option_args=args) is None
         assert_equal(self.batch.options.test, True)
         assert_equal(self.batch.options.dup, 4)
         assert_equal(self.batch.options.output_dir, self.dir)
@@ -276,3 +276,4 @@ class TestClustering:
                 should_be += cPickle.dumps("runs") + "\n"
                 should_be += "\n"
             assert_equal(results_file.read(), should_be)
+

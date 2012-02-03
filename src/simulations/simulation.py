@@ -10,10 +10,44 @@ Classes:
 import os
 import sys
 
-from simulations.utils.eventemitter import EventEmitter
+from simulations.base import Base
+from simulations.base import listener
 
 
-class Simulation(EventEmitter):
+def _close_out_fd(this):
+    """ Closes the self._out object that simulations should print to
+
+    """
+
+    if this.out_opened:
+        this.out.close()
+        this.out_opened = False
+
+    this.out = None
+
+
+def _open_out_fd(this):
+    """ Opens the self._out object that simulations should print to
+
+    """
+
+    if this.out_opened:
+        _close_out_fd(this)
+
+    if this.outfile is None:
+        this.out = sys.stdout
+    elif this.outfile:
+        this.out = open(this.outfile, "w")
+        this.out_opened = True
+    else:
+        this.out_opened = True
+        this.out = open(os.devnull, "w")
+
+
+@listener('run', _open_out_fd)
+@listener('done', _close_out_fd)
+@listener('outfile changed', _open_out_fd)
+class Simulation(Base):
     """ Base class for an individual simulation
 
     Public Methods:
@@ -65,7 +99,7 @@ class Simulation(EventEmitter):
 
         """
 
-        EventEmitter.__init__(self)
+        super(Simulation, self).__init__(*args, **kwdargs)
 
         self.data = data
         self.num = iteration
@@ -73,12 +107,6 @@ class Simulation(EventEmitter):
         self.out = None
         self.out_opened = False
         self.result = None
-
-        self.on('run', self.open_out_fd)
-        self.on('done', self.close_out_fd)
-        self.on('outfile changed', self.open_out_fd)
-
-        self._add_listeners()
 
         self.set_output_file(outfile)
 
@@ -95,36 +123,6 @@ class Simulation(EventEmitter):
         self.outfile = fname
         self.emit('outfile changed', self)
 
-    @staticmethod
-    def open_out_fd(this):
-        """ Opens the self._out object that simulations should print to
-
-        """
-
-        if this.out_opened:
-            this.close_out_fd(this)
-
-        if this.outfile is None:
-            this.out = sys.stdout
-        elif this.outfile:
-            this.out = open(this.outfile, "w")
-            this.out_opened = True
-        else:
-            this.out_opened = True
-            this.out = open(os.devnull, "w")
-
-    @staticmethod
-    def close_out_fd(this):
-        """ Closes the self._out object that simulations should print to
-
-        """
-
-        if this.out_opened:
-            this.out.close()
-            this.out_opened = False
-
-        this.out = None
-
     def run(self):
         """ Runs the simulation. Handles opening and closing the self.out file
             object.
@@ -136,14 +134,7 @@ class Simulation(EventEmitter):
         self.emit('done', self)
         return self.result
 
-    def _add_listeners(self):
-        """ Set up listeners for various events (should implement)
-
-        """
-
-        pass
-
-    def _run(self):
+    def _run(self, *args, **kwdargs):
         """ Actual functionality for running the simulation (should implement)
 
         """
