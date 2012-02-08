@@ -391,7 +391,17 @@ def default_pool_handler(this, pool, out=None):
     if not this.options.quiet:
         ## pp stuff
         #print >> out, "Pool Started: {0} workers".format(pool.get_ncpus())
-        print >> out, "Pool Started: {0} workers".format(pool._processes)
+
+        str = "Pool Started: {0} workers"
+        try:
+            print >> out, str.format(pool._processes)
+        except AttributeError:
+            if this.options.pool_size is None:
+                pool_size = mp.cpu_count()
+            else:
+                pool_size = this.options.pool_size
+
+            print >> out, str.format(pool_size)
 
 
 def default_start_handler(this, out=None):
