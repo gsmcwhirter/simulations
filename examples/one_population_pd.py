@@ -95,6 +95,7 @@ class PrisonersDilemmaSim(OnePopDiscreteReplicatorDynamics):
 class PDSimRunner(SimulationRunner):
     pass
 
+
 if __name__ == '__main__':
     runner = PDSimRunner(PrisonersDilemmaSim)
-    runner.go(pp_modules=("from one_population_pd import PrisonersDilemmaSim",))
+    runner.go()
