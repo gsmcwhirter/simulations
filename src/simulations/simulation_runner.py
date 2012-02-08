@@ -2,21 +2,21 @@
 
 Classes:
 
-    SimulationRunner
+    :py:class:`SimulationRunner`
       Handles option parsing and a pp server pool for simulations
 
 Functions:
 
-    default_pool_started_handler
+    :py:func:`default_pool_handler`
       Default handler for 'pool started' events
 
-    default_start_handler
+    :py:func:`default_start_handler`
       Default handler for 'start' events
 
-    default_result_handler
+    :py:func:`default_result_handler`
       Default handler for 'result' events
 
-    run_simulation
+    :py:func:`run_simulation`
       runs a simulation task
 
 """
@@ -37,42 +37,59 @@ from simulations.utils.functions import random_string
 class SimulationRunner(Base):
     """ Handles option parsing and a multiprocessing pool for simulations
 
+    Parameters:
+
+        simulation_class
+          The class representing the :py:class:`~simulations.simulation.Simulation` to run
+
+    Keyword Parameters:
+
+        default_handlers
+          Flag to set default event handlers for some events (default True)
+
+        option_error_handler
+          An error handler for the :py:class:`~simulations.optionparser.OptionParser`
+
+        option_exit_handler
+          An exit handler for the :py:class:`~simulations.optionparser.OptionParser`
+
     Public Methods:
 
-        go
+        :py:meth:`~SimulationRunner.go`
           Kick off the batch of simulations
 
     Methods to Implement:
 
-        _add_listeners
+        :py:meth:`~simulations.base.Base._add_listeners`
           Set up event listeners for run events
 
-    Events (all handlers are called with self as the first parameter):
+    Events:
 
-        done
-          emitted when results are totally done (replaces _when_done)
+        done(this)
+          emitted when results are totally done
 
-        go
-          emitted when the go method is called
+        go(this)
+          emitted when the :py:meth:`~SimulationRunner.go` method is called
 
-        made output_dir
+        made output_dir(this)
           emitted if/when the output directory needs to be created
 
-        oparser set up
-          emitted after the OptionParser is set up and able to add options
+        oparser set up(this)
+          emitted after the :py:class:`~simulations.utils.optionparser.OptionParser`
+          is set up and able to add options
 
-        options parsed
-          emitted after the OptionParser has parsed arguments
+        options parsed(this)
+          emitted after the :py:class:`~simulations.utils.optionparser.OptionParser`
+          has parsed arguments
 
-        pool started
-          emitted after the multiprocessing pool is set up
+        pool started(this, pool)
+          emitted after the :py:class:`multiprocessing.Pool` is set up
 
-        result
-          emitted when a result is complete (passes self and the result as
-          parameters)
+        result(this, result)
+          emitted when a result is complete
 
-        start
-          emitted just before the pool imap_unordered is called
+        start(this)
+          emitted just before the pool :py:meth:`~multiprocessing.Pool.imap_unordered` is called
 
     """
 
@@ -82,18 +99,18 @@ class SimulationRunner(Base):
         Parameters:
 
             simulation_class
-              The class representing the simulation to run
+              The class representing the :py:class:`~simulations.simulation.Simulation` to run
+
+        Keyword Parameters:
 
             default_handlers
               Flag to set default event handlers for some events (default True)
 
-        Keyword Parameters:
-
             option_error_handler
-              An error handler for the option parser
+              An error handler for the :py:class:`~simulations.optionparser.OptionParser`
 
             option_exit_handler
-              An exit handler for the option parser
+              An exit handler for the :py:class:`~simulations.optionparser.OptionParser`
 
         """
 
@@ -108,13 +125,14 @@ class SimulationRunner(Base):
     def go(self, **kwdargs):
         """ Verify options and run the batch of simulations
 
-        Parameters:
+        Keyword Parameters:
 
             option_args
-              arguments to pass to the option parser. Defaults to sys.argv[1:].
+              arguments to pass to the :py:class:`~simulations.optionparser.OptionParser`. Defaults to sys.argv[1:].
 
             option_values
-              target of option parsing (probably should not use)
+              target to put the values from the :py:class:`~simulations.optionparser.OptionParser` in
+              (probably should not use)
 
         """
 
@@ -141,10 +159,7 @@ class SimulationRunner(Base):
         #else:
         #    pp_deps = ()
 
-        (self.options, self.args) = self.oparser.parse_args(
-                                        args=option_args,
-                                        values=option_values
-                                    )
+        (self.options, self.args) = self.oparser.parse_args(args=option_args, values=option_values)
 
         self._check_base_options()
         self.emit('options parsed', self)
@@ -153,9 +168,7 @@ class SimulationRunner(Base):
             self.emit('made output_dir', self)
             os.makedirs(self.options.output_dir, 0755)
 
-        output_base = ("{0}" + os.sep + "{1}").format(
-                                                self.options.output_dir, "{0}"
-                                                )
+        output_base = ("{0}" + os.sep + "{1}").format(self.options.output_dir, "{0}")
 
         stats = open(output_base.format(self.options.stats_file), "wb")
 
@@ -181,9 +194,7 @@ class SimulationRunner(Base):
         tasks_base = ([self.data, i, None]
                         for i in range(self.options.dup))
         if self.options.file_dump:
-            tasks = (task[:2] + [output_base.format(
-                                    self.options.output_file.format(task[1] + 1)
-                                    )]
+            tasks = (task[:2] + [output_base.format(self.options.output_file.format(task[1] + 1))]
                         for task in tasks_base)
         elif self.options.quiet:
             tasks = (task[:2] + [False] for task in tasks_base)
@@ -247,26 +258,24 @@ class SimulationRunner(Base):
         self.emit('done', self)
 
     def _set_base_options(self):
-        """ Set up the basic OptionParser options
+        """ Set up the basic :py:class:`~simulations.optionparser.OptionParser` options.
+        Calling this is handled by the decorator :py:func:`simulations.base.withoptions`
 
         Options:
 
-            -D | --nofiledump           Do not dump individual simulation
-                                            output
-            -F | --filename=file        Format string for file name of
-                                            individual duplication output
-            -N | --duplications=num     Number of trials to run
-            -O | --output=dir           Directory to which to output the
-                                            results
-            -P | --poolsize=num         Number of simultaneous trials
-            -Q | --quiet                Suppress all output except aggregate
-                                            pickle dump
-            -S | --statsfile=file       File name for aggregate, pickled output
-            --cluster                   List of cluster servers to use via
-                                            parallelpython
-            --clustersecret             Password to access the cluster servers
+        -D, --nofiledump                Do not dump individual simulation output
+        -F STRING, --filename=STRING    Format string for file name of individual duplication output
+        -N NUM, --duplications=NUM      Number of trials to run
+        -O DIR, --output=DIR            Directory to which to output the results
+        -P NUM, --poolsize=NUM          Number of simultaneous trials
+        -Q, --quiet                     Suppress all output except aggregate pickle dump
+        -S FILE, --statsfile=FILE       File name for aggregate, pickled output
 
         """
+
+        ## pp stuff (from docstring)
+        #            --cluster                   List of cluster servers to use via parallelpython
+        #            --clustersecret             Password to access the cluster servers
 
         self.oparser.add_option("-N", "--duplications", type="int",
                                     action="store", dest="dup", default=1,
@@ -290,13 +299,14 @@ class SimulationRunner(Base):
         self.oparser.add_option("-Q", "--quiet", action="store_true",
                                     dest="quiet", default=False,
                                     help="suppress standard output")
-        self.oparser.add_option("--cluster", action="store", type="string",
-                                    dest="cluster_string", default=None,
-                                    help="list of cluster servers")
-        self.oparser.add_option("--clustersecret", action="store",
-                                    type="string", dest="cluster_secret",
-                                    default=None,
-                                    help="password for the cluster")
+        ## pp stuff
+        #self.oparser.add_option("--cluster", action="store", type="string",
+        #                            dest="cluster_string", default=None,
+        #                            help="list of cluster servers")
+        #self.oparser.add_option("--clustersecret", action="store",
+        #                            type="string", dest="cluster_secret",
+        #                            default=None,
+        #                            help="password for the cluster")
 
     def _check_base_options(self):
         """ Verify the values passed to the base options
@@ -304,6 +314,7 @@ class SimulationRunner(Base):
         Checks:
 
             - Number of duplications is positive
+            - Pool size is positive, if specified
 
         """
 
@@ -320,6 +331,12 @@ class SimulationRunner(Base):
     def _add_default_listeners(self):
         """ Sets up default listeners for various events
 
+        Events Handled:
+
+            - pool started - :py:func:`default_pool_handler`
+            - start - :py:func:`default_start_handler`
+            - result - :py:func:`default_result_handler`
+
         """
 
         self.on('pool started', default_pool_handler)
@@ -328,13 +345,12 @@ class SimulationRunner(Base):
 
 
 def run_simulation(task):
-    """ A simple function to run the simulation. Used with the pp server.
+    """ A simple function to run a :py:class:`~simulations.simulation.Simulation`. Used with the multiprocessing pool.
 
     Parameters:
 
         task
-          a list/tuple whose first element is a Simulation class and the rest
-          of whose elements are parameters for __init__
+          An instance of a :py:class:`~simulations.simulation.Simulation` to run
 
     """
 
@@ -351,10 +367,10 @@ def default_result_handler(this, result, out=None):
     Parameters:
 
         this
-          a reference to the simulation batch
+          a reference to a :py:class:`SimulationRunner` instance
 
         result
-          the result object
+          the result object from the :py:class:`~simulations.simulation.Simulation`
 
         out
           the file descriptor to print to
@@ -375,10 +391,10 @@ def default_pool_handler(this, pool, out=None):
     Parameters:
 
         this
-          a reference to the simulation batch
+          a reference to a :py:class:`SimulationRunner` instance
 
         pool
-          the pool that was started
+          the :py:class:`multiprocessing.Pool` that was started
 
         out
           the file descriptor to print to
@@ -392,16 +408,15 @@ def default_pool_handler(this, pool, out=None):
         ## pp stuff
         #print >> out, "Pool Started: {0} workers".format(pool.get_ncpus())
 
-        str = "Pool Started: {0} workers"
         try:
-            print >> out, str.format(pool._processes)
+            pool_size = pool._processes
         except AttributeError:
             if this.options.pool_size is None:
                 pool_size = mp.cpu_count()
             else:
                 pool_size = this.options.pool_size
 
-            print >> out, str.format(pool_size)
+        print >> out, "Pool Started: {0} workers".format(pool_size)
 
 
 def default_start_handler(this, out=None):
@@ -410,7 +425,7 @@ def default_start_handler(this, out=None):
     Parameters:
 
         this
-          a reference to the simulation batch
+          a reference to a :py:class:`SimulationRunner` instance
 
         out
           the file descriptor to print to

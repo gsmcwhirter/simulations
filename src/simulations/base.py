@@ -2,17 +2,21 @@
 
 Classes:
 
-    Base
+    :py:class:`Base`
       Handles basic __init__ and listener patterns shared among several classes
 
-Functions:
+Decorators:
 
-    listener
-      A class decorator adding a listener without disrupting _add_listeners
+    :py:func:`listener`
+      A class decorator adding a listener without disrupting :py:meth:`~Base._add_listeners`
 
-    once
+    :py:func:`once`
       A class decorator adding a once-only listener without disrupting
-      _add_listeners
+      :py:meth:`~Base._add_listeners`
+
+    :py:func:`withoptions`
+      A class decorator adding basic :py:class:`~simulations.utils.optionparser.OptionParser`
+      functionality
 
 """
 
@@ -22,12 +26,22 @@ from simulations.utils.optionparser import OptionParser
 
 class Base(EventEmitter):
     """ The base class that handles common functionality from which other
-        EventEmitter classes are derived
+        :py:class:`~simulations.utils.eventemitter.EventEmitter` classes are derived
+
+        Keyword Parameters:
+
+            default_handlers
+              If true or not present, adds the default handlers defined in :py:meth:`Base._add_default_listeners`
 
     """
 
     def __init__(self, *args, **kwdargs):
         """ Handles the initialization process
+
+        Keyword Parameters:
+
+            default_handlers
+              If true or not present, adds the default handlers defined in :py:meth:`Base._add_default_listeners`
 
         """
 
@@ -58,7 +72,21 @@ class Base(EventEmitter):
 
 
 def withoptions(klass):
-    """ A class wrapper that handles using an option parser
+    """ A class wrapper that handles using an :py:class:`~simulations.utils.optionparser.OptionParser`
+
+    Adds Keyword Parameters:
+
+        option_error_handler
+          An error handler for the :py:class:`~simulations.optionparser.OptionParser`
+
+        option_exit_handler
+          An exit handler for the :py:class:`~simulations.optionparser.OptionParser`
+
+    Adds Events:
+
+        oparser set up
+          emitted after the :py:class:`~simulations.utils.optionparser.OptionParser`
+          is set up and able to add options
 
     """
 
@@ -94,6 +122,10 @@ def withoptions(klass):
 def listener(event, handler):
     """ Class decorator to add listeners in a brief way
 
+    This is effectively the same as adding a call to
+    :py:meth:`~simulations.utils.eventemitter.EventEmitter.add_listener` in
+    :py:meth:`~Base._add_listeners`.
+
     Parameters:
 
         event
@@ -127,7 +159,11 @@ def listener(event, handler):
 
 
 def once(event, handler):
-    """ Class decorator to handler once-listeners in a brief way
+    """ Class decorator to handler once-listeners in a brief way.
+
+    This is effectively the same as adding a call to
+    :py:meth:`~simulations.utils.eventemitter.EventEmitter.once` in
+    :py:meth:`~Base._add_listeners`.
 
     Parameters:
 
@@ -140,8 +176,7 @@ def once(event, handler):
     """
 
     def wrapper(klass):
-        """ Wraps _add_listeners on klass, adding a new once-only listener for
-            an event
+        """ Wraps _add_listeners on klass, adding a new once-only listener for an event.
 
         """
 

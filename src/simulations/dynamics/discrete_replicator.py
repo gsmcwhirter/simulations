@@ -1,10 +1,9 @@
-""" Simulation classes that handle variations of discrete-time replicator
-    dynamics
+""" Simulation classes that handle variations of discrete-time replicator dynamics
 
 Classes:
 
-    DiscreteReplicatorDynamics
-      implements one-population discrete time replicator dynamics
+    :py:class:`DiscreteReplicatorDynamics`
+      implements generic discrete time replicator dynamics
 
 """
 
@@ -14,33 +13,64 @@ from simulations.dynamics.generation_machine import GenerationMachine
 class DiscreteReplicatorDynamics(GenerationMachine):
     """ Implements an abstract discrete-time replicator dynamics
 
+    See also :py:class:`simulations.dynamics.generation_machine.GenerationMachine`
+
+    Keyword Parameters:
+
+        effective_zero
+          The effective zero value for floating-point comparisons
+          (default 1e-10)
+
+        types
+          A list of names for the possible types (used to calculate
+          dimensionality, defaults to the return value of :py:meth:`~DiscreteReplicatorDynamics._default_types`)
+
+        background_rate
+          The natural rate of reproduction (parameter in the dynamics,
+          default 0.)
+
     Methods to Implement:
 
-        _interaction
-          Returns the payoff for an given set of types
+        :py:meth:`~simulations.base.Base._add_listeners`
+          Adds listeners to various events
+
+        :py:meth:`~DiscreteReplicatorDynamics._default_types`
+          Returns the default value for :py:attr:`DiscreteReplicatorDynamics.types` when no
+          keyword parameter is provided to :py:meth:`~DiscreteReplicatorDynamics.__init__`.
+
+        :py:meth:`~simulations.dynamics.generation_machine.GenerationMachine._null_population`
+          Returns a population that won't be equal to any starting population
+
+        :py:meth:`~simulations.dynamics.generation_machine.GenerationMachine._pop_equals`
+          Returns whether two populations are identical or not
+
+        :py:meth:`~simulations.dynamics.generation_machine.GenerationMachine._random_population`
+          Returns a random starting population
+
+        :py:meth:`~simulations.dynamics.generation_machine.GenerationMachine._step_generation`
+          Returns the next generation, given the current one
 
     Events:
 
-        force stop
+        force stop(this, genct, finalgen, prevgen, firstgen)
           emitted when the generation iteration is broken by a forced stop
           condition (instead of stable state event)
 
-        generation
-          emitted when a generation is complete (self, generation_number,
-          new_gen, old_gen)
+        generation(this, genct, thisgen, lastgen)
+          emitted when a generation is complete
 
-        initial set
-          emitted when the initial population is set up (self, initial_pop)
+        initial set(this, initial_pop)
+          emitted when the initial population is set up
 
-        stable state
-          emitted when a stable state is reached (self, generation_count,
-          final_pop, prev_pop, initial_pop)
+        stable state(this, genct, finalgen, prevgen, firstgen)
+          emitted when a stable state is reached
 
     """
 
     def __init__(self, *args, **kwdargs):
-        """ Checks for default_handlers kwdargs parameter and then delegates to
-            the parent.
+        """ Handles several keyword parameters and sends the rest up the inheritance chain.
+
+        See also :py:meth:`simulations.dynamics.generation_machine.GenerationMachine.__init__`
 
         Keyword Parameters:
 
@@ -50,17 +80,11 @@ class DiscreteReplicatorDynamics(GenerationMachine):
 
             types
               A list of names for the possible types (used to calculate
-              dimensionality, default ['A','B'])
-
-            interaction_arity
-              The number of players in a given interaction (default 2)
+              dimensionality, defaults to the return value of :py:meth:`~DiscreteReplicatorDynamics._default_types`)
 
             background_rate
               The natural rate of reproduction (parameter in the dynamics,
               default 0.)
-
-            default_handlers
-              Flag to use the default event handlers (default True)
 
         """
 
@@ -83,6 +107,11 @@ class DiscreteReplicatorDynamics(GenerationMachine):
 
     def _add_default_listeners(self):
         """ Sets up default event listeners
+
+        Handlers:
+
+            - stable state - :py:func:`stable_state_handler`
+            - force stop - :py:func:`stable_state_handler`
 
         """
 

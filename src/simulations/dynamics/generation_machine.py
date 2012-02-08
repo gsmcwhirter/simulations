@@ -1,68 +1,63 @@
-""" Simulation classes that handle variations of discrete-time replicator
-    dynamics
+""" Provides a very abstract generation-step machine
 
 Classes:
 
-    GenerationMachine
-      implements one-population discrete time replicator dynamics
+    :py:class:`GenerationMachine`
+      A very abstract generation-step machine.
+      You should probably not use this directly.
+
+Functions:
+
+    :py:func:`initial_set_handler`
+      Default handler for 'initial set' events
+
+    :py:func:`generation_report_handler`
+      Default handler for 'generation' events
 
 """
 
-from simulations.dynamics.handlers import initial_set_handler
-from simulations.dynamics.handlers import generation_report_handler
 from simulations.simulation import Simulation
 
 
 class GenerationMachine(Simulation):
-    """ Implements an abstract discrete-time replicator dynamics
+    """ Implements an abstract generation-step machine
 
     Methods to Implement:
 
-        _interaction
-          Returns the payoff for an given set of types
+        :py:meth:`~simulations.base.Base._add_listeners`
+          Adds listeners to various events
+
+        :py:meth:`~simulations.dynamics.generation_machine.GenerationMachine._null_population`
+          Returns a population that won't be equal to any starting population
+
+        :py:meth:`~simulations.dynamics.generation_machine.GenerationMachine._pop_equals`
+          Returns whether two populations are identical or not
+
+        :py:meth:`~simulations.dynamics.generation_machine.GenerationMachine._random_population`
+          Returns a random starting population
+
+        :py:meth:`~simulations.dynamics.generation_machine.GenerationMachine._step_generation`
+          Returns the next generation, given the current one
 
     Events:
 
-        force stop
+        force stop(this, genct, finalgen, prevgen, firstgen)
           emitted when the generation iteration is broken by a forced stop
           condition (instead of stable state event)
 
-        generation
-          emitted when a generation is complete (self, generation_number,
-          new_gen, old_gen)
+        generation(this, genct, thisgen, lastgen)
+          emitted when a generation is complete
 
-        initial set
-          emitted when the initial population is set up (self, initial_pop)
+        initial set(this, initial_pop)
+          emitted when the initial population is set up
 
-        stable state
-          emitted when a stable state is reached (self, generation_count,
-          final_pop, prev_pop, initial_pop)
+        stable state(this, genct, finalgen, prevgen, firstgen)
+          emitted when a stable state is reached
 
     """
 
     def __init__(self, *args, **kwdargs):
-        """ Checks for default_handlers kwdargs parameter and then delegates to
-            the parent.
-
-        Keyword Parameters:
-
-            effective_zero
-              The effective zero value for floating-point comparisons
-              (default 1e-10)
-
-            types
-              A list of names for the possible types (used to calculate
-              dimensionality, default ['A','B'])
-
-            interaction_arity
-              The number of players in a given interaction (default 2)
-
-            background_rate
-              The natural rate of reproduction (parameter in the dynamics,
-              default 0.)
-
-            default_handlers
-              Flag to use the default event handlers (default True)
+        """ Sets up some attributes and delegates up the inheritance chain.
 
         """
 
@@ -73,6 +68,11 @@ class GenerationMachine(Simulation):
 
     def _add_default_listeners(self):
         """ Sets up default event listeners for various events
+
+        Handlers:
+
+            - initial set - :py:func:`simulations.dynamics.handlers.initial_set_handler`
+            - generation - :py:func:`simulations.dynamics.handlers.generation_report_handler`
 
         """
 
@@ -174,3 +174,47 @@ class GenerationMachine(Simulation):
                 initial_pop,
                 this_generation,
                 self.result_data)
+
+
+def initial_set_handler(this, initial_pop):
+    """ Handles the 'initial set' event by default for discrete
+        replicator dynamics
+
+    Parameters:
+
+        this
+          a reference to the simulation
+
+        initial_pop
+          the initial population
+
+    """
+
+    print >> this.out, "Initial State: {0}".format(initial_pop)
+    print >> this.out
+
+
+def generation_report_handler(this, genct, thisgen, lastgen):
+    """ Print out a report of the current generation
+
+    Parameters:
+
+        this
+          a reference to the simulation
+
+        genct
+          the generation number
+
+        thisgen
+          the current population
+
+        lastgen
+          the previous population
+
+    """
+
+    print >> this.out, "-" * 72
+    print >> this.out, "Generation {0}:".format(genct)
+    print >> this.out, "\t{0}".format(thisgen)
+    print >> this.out
+    this.out.flush()

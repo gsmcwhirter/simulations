@@ -101,7 +101,8 @@ class TestStatsParser:
     def test_option_failure(self):
         args = ["-F", self.dir + os.sep + "results.testout", "-V", "--test"]
 
-        assert_raises(SystemExit, self.stats.go, args)
+        assert_raises(SystemExit, self.stats.go, option_args=args)
+        assert_raises(SystemExit, self.stats.go, option_values=None)
 
     def test_option_failure2(self):
         with open(self.dir + os.sep + "results.testout", "w") as testfile:
@@ -109,7 +110,7 @@ class TestStatsParser:
 
         args = ["-F", self.dir + os.sep + "results.testout", "-V"]
 
-        assert_raises(SystemExit, self.stats.go, args)
+        assert_raises(SystemExit, self.stats.go, option_args=args)
 
     def test_go(self):
         bargs = ["-F",  "iter_{0}.testout", "-N", "4", "-P", "2", "-O", self.dir, "-S", "results.testout"]

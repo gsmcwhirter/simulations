@@ -1,3 +1,7 @@
+""" An example simulation for a Hawk-Dove game using two-population discrete time replicator dynamics.
+
+"""
+
 ## This is hackery to make this run from where it is. Do not do this.
 import os
 import sys
@@ -98,4 +102,4 @@ class HDSimRunner(SimulationRunner):
 
 if __name__ == '__main__':
     runner = HDSimRunner(HawkDoveSim)
-    runner.go(pp_modules=("from two_population_hd import HawkDoveSim",))
+    runner.go()

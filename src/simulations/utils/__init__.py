@@ -2,17 +2,17 @@
 
 Modules:
 
-    eventemitter
-      Implement an EventEmitter model
+    :py:mod:`~simulations.utils.eventemitter`
+      Implements an EventEmitter model
 
-    fake_server
+    :py:mod:`~simulations.utils.fake_server`
       Implements a fake pp-like server interface for running things
-      one-at-a-time
+      one-at-a-time (not used)
 
-    functions
+    :py:mod:`~simulations.utils.functions`
       Contains utility functions
 
-    optionparser
-      Extends optparse.OptionParser to add error and exit handlers
+    :py:mod:`~simulations.utils.optionparser`
+      Extends :py:class:`optparse.OptionParser` to add error and exit handlers
 
 """

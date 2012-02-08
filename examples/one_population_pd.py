@@ -1,3 +1,7 @@
+""" An example simulation for a Prisoner's Dilemma using one-population discrete time replicator dynamics.
+
+"""
+
 ## This is hackery to make this run from where it is. Do not do this.
 import os
 import sys

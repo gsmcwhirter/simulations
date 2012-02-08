@@ -2,24 +2,24 @@
 
 Modules:
 
-    base
+    :py:mod:`~simulations.base`
       Handles generic set-up tasks for EventEmitter-derived classes
 
-    simulation
+    :py:mod:`~simulations.simulation`
       Handles defining simulations
 
-    simulation_runner
+    :py:mod:`~simulations.simulation_runner`
       Handles running simulations
 
-    statsparser
+    :py:mod:`~simulations.statsparser`
       Handles analyzing simulation output
 
 Packages:
 
-    dynamics
+    :py:mod:`~simulations.dynamics`
       Base implementations of various dynamics
 
-    utils
+    :py:mod:`~simulations.utils`
       Has utility modules
 
 """

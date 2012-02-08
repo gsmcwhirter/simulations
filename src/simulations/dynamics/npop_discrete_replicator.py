@@ -1,14 +1,13 @@
-""" Simulation classes that handle variations of discrete-time replicator
-    dynamics
+""" Simulation class that implements n-population discrete-time replicator dynamics
 
 Classes:
 
-    NPopDiscreteReplicatorDynamics
+    :py:class:`NPopDiscreteReplicatorDynamics`
       implements n-population discrete time replicator dynamics
 
 Functions:
 
-    stable_state_handler
+    :py:func:`stable_state_handler`
       Default handler for 'stable state' and 'force stop' events in n
       populations
 
@@ -23,51 +22,46 @@ from simulations.dynamics.discrete_replicator import DiscreteReplicatorDynamics
 
 
 class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
-    """ Implements an abstract discrete-time replicator dynamics
+    """ Implements n-population discrete time replicator dynamics
+
+    Keyword Parameters:
+
+        effective_zero
+          The effective zero value for floating-point comparisons
+          (default 1e-10)
+
+        types
+          A list of names for the possible types (used to calculate
+          dimensionality, defaults to the return value of :py:meth:`~NPopDiscreteReplicatorDynamics._default_types`)
+
+        background_rate
+          The natural rate of reproduction (parameter in the dynamics,
+          default 0.)
 
     Methods to Implement:
 
-        _interaction
-          Returns the payoff for types
+        :py:meth:`~NPopDiscreteReplicatorDynamics._interaction`
+          Returns the payoff for a type given a strategy profile
 
     Events:
 
-        force stop
+        force stop(this, genct, finalgen, prevgen, firstgen)
           emitted when the generation iteration is broken by a forced stop
           condition (instead of stable state event)
 
-        generation
-          emitted when a generation is complete (self, generation_number,
-          new_gen, old_gen)
+        generation(this, genct, thisgen, lastgen)
+          emitted when a generation is complete
 
-        initial set
-          emitted when the initial population is set up (self, initial_pop)
+        initial set(this, initial_pop)
+          emitted when the initial population is set up
 
-        stable state
-          emitted when a stable state is reached (self, generation_count,
-          final_pop, prev_pop, initial_pop)
+        stable state(this, genct, finalgen, prevgen, firstgen)
+          emitted when a stable state is reached
 
     """
 
     def __init__(self, *args, **kwdargs):
         """ Checks for kwdargs parameters and then delegates to the parent.
-
-        Keyword Parameters:
-
-            effective_zero
-              The effective zero value for floating-point comparisons
-              (default 1e-10)
-
-            types
-              A list of names for the possible types (used to calculate
-              dimensionality, default ['A','B'])
-
-            background_rate
-              The natural rate of reproduction (parameter in the dynamics,
-              default 0.)
-
-            default_handlers
-              Flag to use the default event handlers (default True)
 
         """
 
@@ -75,6 +69,11 @@ class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
 
     def _add_default_listeners(self):
         """ Sets up default event listeners for various events
+
+        Handlers:
+
+            - stable state - :py:func:`stable_state_handler`
+            - force stop - :py:func:`stable_state_handler`
 
         """
 
@@ -84,6 +83,10 @@ class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
         self.on('force stop', stable_state_handler)
 
     def _default_types(self):
+        """ Returns the default types if none are given to the constructor
+
+        """
+
         return [
             ['A', 'B'],
             ['C', 'D']
@@ -100,6 +103,9 @@ class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
                         for i in xrange(len(self.types))])
 
     def _null_population(self):
+        """ Generates a population that will not be equal to any initial population
+
+        """
 
         return tuple([tuple([0.] * len(self.types[k]))
                        for k in xrange(len(self.types))])

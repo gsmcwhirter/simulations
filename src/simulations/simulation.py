@@ -2,7 +2,7 @@
 
 Classes:
 
-    Simulation
+    :py:class:`~simulations.simulation.Simulation`
       Framework for a basic simulation
 
 """
@@ -15,7 +15,12 @@ from simulations.base import listener
 
 
 def _close_out_fd(this):
-    """ Closes the self._out object that simulations should print to
+    """ Closes the :py:attr:`Simulation.out` object that simulations should print to
+
+    Parameters:
+
+        this
+          A reference to a :py:class:`Simulation` instance
 
     """
 
@@ -27,7 +32,12 @@ def _close_out_fd(this):
 
 
 def _open_out_fd(this):
-    """ Opens the self._out object that simulations should print to
+    """ Opens the :py:attr:`Simulation.out` object that simulations should print to
+
+    Parameters:
+
+        this
+          A reference to a :py:class:`Simulation` instance
 
     """
 
@@ -51,35 +61,49 @@ def _open_out_fd(this):
 class Simulation(Base):
     """ Base class for an individual simulation
 
+    Parameters:
+
+        data
+          The data dictionary for the simulation. Usually created by the
+          :py:class:`~simulations.simulation_runner.SimulationRunner`
+
+        iteration
+          The iteration number of the simulation. Usually handled by the
+          :py:class:`~simulations.simulation_runner.SimulationRunner`
+
+        outfile
+          The name of a file to which to dump output (or None, indicating
+          stdout)
+
     Public Methods:
 
-        run
+        :py:meth:`run`
           Runs the simulation
 
-        set_output_file
+        :py:meth:`set_output_file`
           Sets the output file name
 
     Methods to Implement:
 
-        _add_listeners
+        :py:meth:`~simulations.base.Base._add_listeners`
           Set up listeners for various simulation events
 
-        _run
+        :py:meth:`~Simulation._run`
           Actual simulation functionality
 
-    Events (all handlers are called with self as the first parameter):
+    Events:
 
-        done
-          emitted when the run is complete and results have been stored
+        done(this)
+          emitted when :py:meth:`~Simulation.run` is complete and results have been stored
 
-        outfile changed
-          emitted when the outfile name has been changed by set_output_file
+        outfile changed(this)
+          emitted when the outfile name has been changed by :py:meth:`~Simulation.set_output_file`
 
-        outfile error
+        outfile error(this)
           emitted when there was an error opening the output file
 
-        run
-          emitted just before _run is called
+        run(this)
+          emitted just before :py:meth:`~Simulation._run` is called
 
     """
 
@@ -89,10 +113,12 @@ class Simulation(Base):
         Parameters:
 
             data
-              The data object created by the SimulationBatch
+              The data dictionary for the simulation. Usually created by the
+              :py:class:`~simulations.simulation_runner.SimulationRunner`
 
             iteration
-              The iteration number of the simulation
+              The iteration number of the simulation. Usually handled by the
+              :py:class:`~simulations.simulation_runner.SimulationRunner`
 
             outfile
               The name of a file to which to dump output (or None, indicating
@@ -126,7 +152,7 @@ class Simulation(Base):
         self.emit('outfile changed', self)
 
     def run(self):
-        """ Runs the simulation. Handles opening and closing the self.out file
+        """ Runs the simulation. Handles opening and closing the :py:attr:`~Simulation.out` file
             object.
 
         """

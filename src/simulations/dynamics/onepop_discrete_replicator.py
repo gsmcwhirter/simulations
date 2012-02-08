@@ -1,16 +1,14 @@
-""" Simulation classes that handle variations of discrete-time replicator
-    dynamics
+""" Simulation class that implements one-population discrete-time replicator dynamics
 
 Classes:
 
-    OnePopDiscreteReplicatorDynamics
+    :py:class:`OnePopDiscreteReplicatorDynamics`
       implements one-population discrete time replicator dynamics
 
 Functions:
 
-    stable_state_handler
-      Default handler for 'stable state' and 'force stop' events in one
-      population
+    :py:func:`stable_state_handler`
+      Default handler for 'stable state' and 'force stop' events
 
 """
 
@@ -23,35 +21,49 @@ from simulations.dynamics.discrete_replicator import DiscreteReplicatorDynamics
 
 
 class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
-    """ Implements an abstract discrete-time replicator dynamics
+    """ Implements one-population discrete time replicator dynamics
+
+    Keyword Parameters:
+
+        effective_zero
+          The effective zero value for floating-point comparisons
+          (default 1e-10)
+
+        interaction_arity
+          The number of players in a given interaction (default 2)
+
+        types
+          A list of names for the possible types (used to calculate
+          dimensionality, defaults to the return value of :py:meth:`~OnePopDiscreteReplicatorDynamics._default_types`)
+
+        background_rate
+          The natural rate of reproduction (parameter in the dynamics,
+          default 0.)
 
     Methods to Implement:
 
-        _interaction
-          Returns the payoff for an given set of types
+        :py:meth:`~OnePopDiscreteReplicatorDynamics._interaction`
+          Returns the payoff for a type given a strategy profile
 
     Events:
 
-        force stop
+        force stop(this, genct, finalgen, prevgen, firstgen)
           emitted when the generation iteration is broken by a forced stop
           condition (instead of stable state event)
 
-        generation
-          emitted when a generation is complete (self, generation_number,
-          new_gen, old_gen)
+        generation(this, genct, thisgen, lastgen)
+          emitted when a generation is complete
 
-        initial set
-          emitted when the initial population is set up (self, initial_pop)
+        initial set(this, initial_pop)
+          emitted when the initial population is set up
 
-        stable state
-          emitted when a stable state is reached (self, generation_count,
-          final_pop, prev_pop, initial_pop)
+        stable state(this, genct, finalgen, prevgen, firstgen)
+          emitted when a stable state is reached
 
     """
 
     def __init__(self, *args, **kwdargs):
-        """ Checks for default_handlers kwdargs parameter and then delegates to
-            the parent.
+        """ Checks for the interaction_arity keyword argument and passes up the inheritance chain.
 
         Keyword Parameters:
 
@@ -59,19 +71,17 @@ class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
               The effective zero value for floating-point comparisons
               (default 1e-10)
 
-            types
-              A list of names for the possible types (used to calculate
-              dimensionality, default ['A','B'])
-
             interaction_arity
               The number of players in a given interaction (default 2)
+
+            types
+              A list of names for the possible types (used to calculate
+              dimensionality, defaults to the return value of
+              :py:meth:`~OnePopDiscreteReplicatorDynamics._default_types`)
 
             background_rate
               The natural rate of reproduction (parameter in the dynamics,
               default 0.)
-
-            default_handlers
-              Flag to use the default event handlers (default True)
 
         """
 
@@ -85,6 +95,11 @@ class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
     def _add_default_listeners(self):
         """ Sets up default event listeners
 
+        Handlers:
+
+            - stable state - :py:func:`stable_state_handler`
+            - force stop - :py:func:`stable_state_handler`
+
         """
 
         super(OnePopDiscreteReplicatorDynamics, self)._add_default_listeners()
@@ -94,7 +109,6 @@ class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
 
     def _default_types(self):
         """ Returns a default type object for the population(s)
-            (should implement)
 
         """
 

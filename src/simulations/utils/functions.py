@@ -2,7 +2,7 @@
 
 Functions:
 
-    random_string
+    :py:func:`random_string`
       generates a random string of characters
 
 """
@@ -20,7 +20,6 @@ def random_string(size=6, chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'):
 
         chars
             the list of characters to use in the generation
-                    (default string.ascii_uppercase + string.digits)
 
     """
 

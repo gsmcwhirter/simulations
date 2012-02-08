@@ -2,7 +2,7 @@
 
 Classes:
 
-    StatsParser
+    :py:class:`StatsParser`
       main statistics parsing class
 
 """
@@ -19,35 +19,45 @@ from simulations.base import withoptions
 class StatsParser(Base):
     """ Base class for parsing result files.
 
+    Keyword Parameters:
+
+        option_error_handler
+          An error handler for the :py:class:`~simulations.utils.optionparser.OptionParser`
+
+        option_exit_handler
+          An exit handler for the :py:class:`~simulations.utils.optionparser.OptionParser`
+
     Public Methods:
 
-        go
+        :py:meth:`~StatsParser.go`
           Kick off parsing the results
 
     Methods to Implement:
 
-        _add_listeners
+        :py:meth:`~simulations.base.Base._add_listeners`
           Add listeners for various parsing events
 
-    Events (all handlers are called with self as the first parameter):
+    Events:
 
-        done
-          emitted when results are totally done (replaces _when_done)
+        done(this, out)
+          emitted when results are totally done
 
-        go
-          emitted when the go method is called
+        go(this)
+          emitted when the :py:meth:`~StatsRunner.go` method is called
 
-        oparser set up
-          emitted after the OptionParser is set up and able to add options
+        oparser set up(this)
+          emitted after the :py:class:`~simulations.utils.optionparser.OptionParser`
+          is set up and able to add options
 
-        options parsed
-          emitted after the OptionParser has parsed arguments
+        options parsed(this)
+          emitted after the :py:class:`~simulations.utils.optionparser.OptionParser`
+          has parsed arguments
 
-        result
-          emitted for a result with parameters (self, out, duplication, result)
+        result(this, out, duplication, result)
+          emitted when a result is ready to be interpreted
 
-        result options
-          emitted for the result options with parameters (self, out, options)
+        result options(this, out, options)
+          emitted when the simulation runner options are ready to be interpreted
 
     """
 
@@ -57,23 +67,23 @@ class StatsParser(Base):
         Keyword Parameters:
 
             option_error_handler
-              An error handler for the option parser
+              An error handler for the :py:class:`~simulations.utils.optionparser.OptionParser`
 
             option_exit_handler
-              An exit handler for the option parser
+              An exit handler for the :py:class:`~simulations.utils.optionparser.OptionParser`
 
         """
 
         super(StatsParser, self).__init__(*args, **kwdargs)
 
-    def go(self, option_args=None, option_values=None):
-        """ Pass off the parsing of the results file after some data
-            manipulation
+    def go(self, **kwdargs):
+        """ Pass off the parsing of the results file after some data manipulation
 
-        Parameters:
+        Keyword Parameters:
 
             option_args
-              arguments to pass to the option parser. Defaults to sys.argv[1:].
+              arguments to pass to the :py:class:`~simulations.utils.optionparser.OptionParser`.
+              Defaults to sys.argv[1:].
 
             option_values
               target of option parsing (probably should not use)
@@ -82,10 +92,17 @@ class StatsParser(Base):
 
         self.emit('go', self)
 
-        (self.options, self.args) = self.oparser.parse_args(
-                                        args=option_args,
-                                        values=option_values
-                                     )
+        if 'option_args' in kwdargs:
+            option_args = kwdargs['option_args']
+        else:
+            option_args = None
+
+        if 'option_values' in kwdargs:
+            option_values = kwdargs['option_values']
+        else:
+            option_values = None
+
+        (self.options, self.args) = self.oparser.parse_args(args=option_args, values=option_values)
 
         self._check_base_options()
         self.emit('options parsed', self)
@@ -93,9 +110,7 @@ class StatsParser(Base):
         with open(self.options.stats_file, "rb") as statsfile:
             if self.options.out_file:
                 if self.options.verbose:
-                    print "Sending output to {0}...".format(
-                                                        self.options.out_file
-                                                     )
+                    print "Sending output to {0}...".format(self.options.out_file)
 
                 with open(self.options.out_file, "w") as out:
                     self._go(statsfile, out)
@@ -165,14 +180,13 @@ class StatsParser(Base):
             print resstr.format(count)
 
     def _set_base_options(self):
-        """ Set up the basic OptionParser options
+        """ Set up the basic :py:class:`~simulations.utils.optionparser.OptionParser` options
 
         Options:
 
-            -F | --statsfile=file       File name of the results file
-            -O | --outfile=file         File to which to print data
-            -V | --verbose              Print detailed output to stdout as
-                                            things are processed
+        -F FILE, --statsfile=FILE       File name of the results file
+        -O FILE, --outfile=FILE         File to which to print data
+        -V, --verbose                   Print detailed output to stdout as things are processed
 
         """
 
