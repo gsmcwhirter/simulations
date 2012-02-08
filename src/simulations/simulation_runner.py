@@ -173,18 +173,17 @@ class SimulationRunner(Base):
 
         self.emit('pool started', self, pool)
 
-        tasks = [[self._simulation_class, self.data, i, None]
-                    for i in range(self.options.dup)]
+        tasks_base = ([self.data, i, None]
+                        for i in range(self.options.dup))
         if self.options.file_dump:
-            for i in range(len(tasks)):
-                tasks[i][3] = output_base.format(
-                    self.options.output_file.format(
-                        i + 1
-                    )
-                )
+            tasks = (task[:2] + [output_base.format(
+                                    self.options.output_file.format(task[1] + 1)
+                                    )]
+                        for task in tasks_base)
         elif self.options.quiet:
-            for i in range(len(tasks)):
-                tasks[i][3] = False
+            tasks = (task[:2] + [False] for task in tasks_base)
+        else:
+            tasks = (task for task in tasks_base)
 
         self.emit('start', self)
 
@@ -223,7 +222,7 @@ class SimulationRunner(Base):
                                              group=self.identifier)
 
             for task in tasks:
-                job_template.submit(task)
+                job_template.submit(self._simulation_class(*task))
 
             pool.wait(self.identifier)
         except KeyboardInterrupt:
@@ -324,10 +323,11 @@ def run_simulation(task):
 
     """
 
-    klass = task.pop(0)
-    sim = klass(*task)
-
-    return sim.run()
+    #klass = task.pop(0)
+    #sim = klass(*task)
+    #
+    #return sim.run()
+    return task.run()
 
 
 def default_result_handler(this, result, out=None):

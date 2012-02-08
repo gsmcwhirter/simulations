@@ -225,6 +225,7 @@ class TestDiscreteReplicatorInstance:
         assert self.sim.result_data is None, "result_data got set somehow"
 
     def test_run3(self):
+        self.sim.is_running = True
         self.sim.emit('run', self.sim)
         (gen_ct, initial_pop, final_pop, custom_data) = self.sim._run((1. - 5. * self.sim.effective_zero, 5. * self.sim.effective_zero))
         self.sim.emit('done', self.sim)
@@ -318,6 +319,7 @@ class TestDiscreteReplicatorThreeway:
         assert_equal(len(initial_pop), len(self.sim.types))
 
     def test_run4(self):
+        self.sim.is_running = True
         self.sim.emit('run', self.sim)
         (gen_ct, initial_pop, final_pop, custom_data) = self.sim._run((1. - 2. * self.sim.effective_zero, 2. * self.sim.effective_zero))
         self.sim.emit('done', self.sim)

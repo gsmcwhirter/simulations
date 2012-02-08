@@ -64,12 +64,16 @@ class TestSimulation:
         assert_equal(self.sim.data, 1)
         assert_equal(self.sim.num, 2)
         assert self.sim.outfile is None, "_outfile is not None"
-        assert_equal(self.sim.out, sys.stdout)
+        assert self.sim.out is None
         assert_equal(self.sim.out_opened, False)
 
     def test_simulation_set_outfile(self):
         self.sim.set_output_file("/tmp/test")
         assert_equal(self.sim.outfile, "/tmp/test")
+        assert self.sim.out is None, "Sim.out is set up"
+
+        self.sim.is_running = True
+        self.sim.set_output_file("/tmp/test")
         assert self.sim.out is not None, "Sim.out is not set up"
 
         simulation._close_out_fd(self.sim)
@@ -100,7 +104,7 @@ class TestSimulation:
 
     def test_delegation_method(self):
         self.sim.set_output_file(None)
-        assert_equal(simrunner.run_simulation([Sim, 1, 2, None]), "runs")
+        assert_equal(simrunner.run_simulation(Sim(1, 2, None)), "runs")
 
 class TestSimulationBatch:
 

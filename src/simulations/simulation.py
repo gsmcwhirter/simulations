@@ -34,14 +34,15 @@ def _open_out_fd(this):
     if this.out_opened:
         _close_out_fd(this)
 
-    if this.outfile is None:
-        this.out = sys.stdout
-    elif this.outfile:
-        this.out = open(this.outfile, "w")
-        this.out_opened = True
-    else:
-        this.out_opened = True
-        this.out = open(os.devnull, "w")
+    if this.is_running:
+        if this.outfile is None:
+            this.out = sys.stdout
+        elif this.outfile:
+            this.out = open(this.outfile, "w")
+            this.out_opened = True
+        else:
+            this.out_opened = True
+            this.out = open(os.devnull, "w")
 
 
 @listener('run', _open_out_fd)
@@ -107,6 +108,7 @@ class Simulation(Base):
         self.out = None
         self.out_opened = False
         self.result = None
+        self.is_running = False
 
         self.set_output_file(outfile)
 
@@ -129,6 +131,7 @@ class Simulation(Base):
 
         """
 
+        self.is_running = True
         self.emit('run', self)
         self.result = self._run()
         self.emit('done', self)
