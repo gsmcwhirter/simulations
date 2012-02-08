@@ -8,4 +8,3 @@ statsparser
     :show-inheritance:
     :undoc-members:
     :private-members:
-    :special-members:
