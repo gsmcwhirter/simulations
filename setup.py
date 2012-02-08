@@ -23,7 +23,7 @@ setup(
     },
     install_requires=[
         'numpy>=1.5',
-        'pp'
+        #'pp'
     ],
     tests_require=[
         'nose>=1.0'
