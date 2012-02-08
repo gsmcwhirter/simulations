@@ -7,7 +7,7 @@ from setuptools import setup
 
 setup(
     name='simulations',
-    version='0.6.5',
+    version='0.6.6',
     author='Gregory McWhirter',
     author_email='gmcwhirt@uci.edu',
     description='A framework for evolutionary game theory simulations',
