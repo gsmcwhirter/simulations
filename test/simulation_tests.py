@@ -216,10 +216,38 @@ class TestSimulationBatch:
                 should_be += "\n"
             assert_equal(results_file.read(), should_be)
 
+    def test_batch_go3(self):
+        args = ["-N", "6", "-P", "1", "-O", self.dir, "-S", "results.testout", "--test", "-D"]
+        assert self.batch.go(option_args=args) is None
+        assert_equal(self.batch.options.test, True)
+        assert_equal(self.batch.options.dup, 6)
+        assert_equal(self.batch.options.output_dir, self.dir)
+        assert_equal(self.batch.options.output_file, "duplication_{0}")
+        assert_equal(self.batch.options.file_dump, False)
+        assert_equal(self.batch.options.stats_file, "results.testout")
+        assert_equal(self.batch.options.pool_size, 1)
+        assert_equal(self.batch.options.quiet, False)
+
+        assert_equal(self.batch.data['test'], True)
+
+        for i in range(6):
+            assert not os.path.isfile(self.dir + os.sep + 'iter_{0}.testout'.format(i + 1)), "Dup file {0} is missing".format(i + 1)
+        assert os.path.isfile(self.dir + os.sep + 'results.testout'), "Results file is missing"
+
+        with open(self.dir + os.sep + 'results.testout', "r") as results_file:
+            should_be = ''
+            should_be += cPickle.dumps(self.batch.options) + "\n"
+            should_be += "\n"
+            for _ in range(6):
+                should_be += cPickle.dumps("runs") + "\n"
+                should_be += "\n"
+            assert_equal(results_file.read(), should_be)
+
     def test_option_failure(self):
         args = ["-N", "-6", "-P", "2", "-O", self.dir, "-S", "results.testout", "-Q", "-D", "--test"]
 
         assert_raises(SystemExit, self.batch.go, option_args=args)
+        assert_raises(SystemExit, self.batch.go, option_values=None)
 
     def test_option_failure2(self):
         args = ["-N", "6", "-P", "2", "-O", self.dir, "-S", "results.testout", "-Q", "-D"]
@@ -231,55 +259,56 @@ class TestSimulationBatch:
 
         assert_raises(SystemExit, self.batch.go, option_args=args)
 
-class TestClustering:
-
-    def setUp(self):
-        self.secret = filename_generator(6)
-        self.server = subprocess.Popen(["ppserver.py", "-s", self.secret])
-        self.batch = Batch(Sim2)
-        self.dir = "/tmp/" + filename_generator(8)
-
-    def tearDown(self):
-        self.batch = None
-        self.server.terminate()
-        if os.path.isdir(self.dir):
-            files = os.listdir(self.dir)
-            for f in files:
-                if f == "." or f == "..": continue
-                if f[-8:] == ".testout":
-                    os.remove(self.dir + os.sep + f)
-            os.rmdir(self.dir)
-
-    def test_batch_cluster_go(self):
-        args = ["-F",  "iter_{0}.testout", "-N", "4", "-P", "2", "-O", self.dir, "-S", "results.testout", "--test", "--cluster=127.0.0.1", "--clustersecret="+self.secret]
-        assert self.batch.go(option_args=args) is None
-        assert_equal(self.batch.options.test, True)
-        assert_equal(self.batch.options.dup, 4)
-        assert_equal(self.batch.options.output_dir, self.dir)
-        assert_equal(self.batch.options.output_file, "iter_{0}.testout")
-        assert_equal(self.batch.options.file_dump, True)
-        assert_equal(self.batch.options.stats_file, "results.testout")
-        assert_equal(self.batch.options.pool_size, 2)
-        assert_equal(self.batch.options.quiet, False)
-        assert_equal(self.batch.options.cluster_string, '127.0.0.1')
-        assert_equal(self.batch.options.cluster_secret, self.secret)
-
-        assert_equal(self.batch.data['test'], True)
-
-        for i in range(4):
-            assert os.path.isfile(self.dir + os.sep + 'iter_{0}.testout'.format(i + 1)), "Dup file {0} is missing".format(i + 1)
-        assert os.path.isfile(self.dir + os.sep + 'results.testout'), "Results file is missing"
-
-        for i in range(4):
-            with open(self.dir + os.sep + 'iter_{0}.testout'.format(i + 1), "r") as dup_file:
-                assert_equal(dup_file.read(), "runs\n")
-
-        with open(self.dir + os.sep + 'results.testout', "r") as results_file:
-            should_be = ''
-            should_be += cPickle.dumps(self.batch.options) + "\n"
-            should_be += "\n"
-            for _ in range(4):
-                should_be += cPickle.dumps("runs") + "\n"
-                should_be += "\n"
-            assert_equal(results_file.read(), should_be)
-
+## pp stuff
+#class TestClustering:
+#
+#    def setUp(self):
+#        self.secret = filename_generator(6)
+#        self.server = subprocess.Popen(["ppserver.py", "-s", self.secret])
+#        self.batch = Batch(Sim2)
+#        self.dir = "/tmp/" + filename_generator(8)
+#
+#    def tearDown(self):
+#        self.batch = None
+#        self.server.terminate()
+#        if os.path.isdir(self.dir):
+#            files = os.listdir(self.dir)
+#            for f in files:
+#                if f == "." or f == "..": continue
+#                if f[-8:] == ".testout":
+#                    os.remove(self.dir + os.sep + f)
+#            os.rmdir(self.dir)
+#
+#    def test_batch_cluster_go(self):
+#        args = ["-F",  "iter_{0}.testout", "-N", "4", "-P", "2", "-O", self.dir, "-S", "results.testout", "--test", "--cluster=127.0.0.1", "--clustersecret="+self.secret]
+#        assert self.batch.go(option_args=args) is None
+#        assert_equal(self.batch.options.test, True)
+#        assert_equal(self.batch.options.dup, 4)
+#        assert_equal(self.batch.options.output_dir, self.dir)
+#        assert_equal(self.batch.options.output_file, "iter_{0}.testout")
+#        assert_equal(self.batch.options.file_dump, True)
+#        assert_equal(self.batch.options.stats_file, "results.testout")
+#        assert_equal(self.batch.options.pool_size, 2)
+#        assert_equal(self.batch.options.quiet, False)
+#        assert_equal(self.batch.options.cluster_string, '127.0.0.1')
+#        assert_equal(self.batch.options.cluster_secret, self.secret)
+#
+#        assert_equal(self.batch.data['test'], True)
+#
+#        for i in range(4):
+#            assert os.path.isfile(self.dir + os.sep + 'iter_{0}.testout'.format(i + 1)), "Dup file {0} is missing".format(i + 1)
+#        assert os.path.isfile(self.dir + os.sep + 'results.testout'), "Results file is missing"
+#
+#        for i in range(4):
+#            with open(self.dir + os.sep + 'iter_{0}.testout'.format(i + 1), "r") as dup_file:
+#                assert_equal(dup_file.read(), "runs\n")
+#
+#        with open(self.dir + os.sep + 'results.testout', "r") as results_file:
+#            should_be = ''
+#            should_be += cPickle.dumps(self.batch.options) + "\n"
+#            should_be += "\n"
+#            for _ in range(4):
+#                should_be += cPickle.dumps("runs") + "\n"
+#                should_be += "\n"
+#            assert_equal(results_file.read(), should_be)
+#

@@ -1,10 +1,9 @@
-""" An extension of optparse.OptionParser that has custom error and exit
-    handling
+""" An extension of optparse.OptionParser that has custom error and exit handling
 
 Classes:
 
-    OptionParser
-      the extension class
+    :py:class:`OptionParser`
+      the extension class of :py:class:`optparse.OptionParser`
 
 """
 
@@ -17,15 +16,18 @@ class OptionParser(optparse.OptionParser):
 
     New Methods:
 
-        set_error_handler
+        :py:meth:`~OptionParser.set_error_handler`
           sets an error handler instead of the default
 
-        set_exit_handler
+        :py:meth:`~OptionParser.set_exit_handler`
           sets an exit handler instead of the default
 
     """
 
     def __init__(self, *args, **kwdargs):
+        """ Delegates to optparse.OptionParser
+
+        """
         optparse.OptionParser.__init__(self, *args, **kwdargs)
 
         self._errorhandler = None

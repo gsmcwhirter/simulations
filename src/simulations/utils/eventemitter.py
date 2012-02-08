@@ -2,16 +2,8 @@
 
 Classes:
 
-    EventEmitter
+    :py:class:`EventEmitter`
       implements the event emitter functionality
-
-Functions:
-
-    listener
-      A class decorator for adding listeners
-
-    once
-      A class decorator for adding once-only listeners
 
 """
 
@@ -24,28 +16,28 @@ class EventEmitter(object):
 
     Public Methods:
 
-        add_listener
+        :py:meth:`~EventEmitter.add_listener`
           add a listener for an event
 
-        on
-          alias for add_listener
+        :py:meth:`~EventEmitter.on`
+          alias for :py:meth:`~EventEmitter.add_listener`
 
-        once
+        :py:meth:`~EventEmitter.once`
           adds a listener, but only executes it once, then it is removed
 
-        emit
+        :py:meth:`~EventEmitter.emit`
           trigger the listeners for an event
 
-        remove_listener
+        :py:meth:`~EventEmitter.remove_listener`
           remove a listener from an event
 
-        remove_all_listeners
+        :py:meth:`~EventEmitter.remove_all_listeners`
           remove all listeners from an event
 
-        listeners
+        :py:meth:`~EventEmitter.listeners`
           get a copy of the listeners on an event
 
-        set_max_listeners
+        :py:meth:`~EventEmitter.set_max_listeners`
           set the maximum number of listeners for an event before warnings are
           issued (default: 10, None for no limit)
 

@@ -1,10 +1,9 @@
-""" Has a fake class that simulates the interface of pp.Server but is only
-    single-threaded
+""" Has a fake class that simulates the interface of pp.Server but is only single-threaded
 
 Classes:
 
-    Server
-      A fake pp.Server class
+    :py:class:`Server`
+      A fake :py:class:`pp.Server` class
 
 """
 
@@ -12,7 +11,7 @@ from pp import DestroyedServerError
 
 
 class Server(object):
-    """ A fake pp.Server implementation -- just single-ordered.
+    """ A fake :py:class:`pp.Server` implementation -- just single-ordered.
 
     """
 
@@ -86,7 +85,7 @@ class Server(object):
                                  group='default',
                                  globls=None):
         """ Runs a task, calling any callback provided and returning a function
-            that returns the results. (Emulates pp.Server)
+            that returns the results. (Emulates :py:class:`pp.Server`)
 
             NOTE: the depfuncs, modules, globals, and group parameters are
                   not used.
