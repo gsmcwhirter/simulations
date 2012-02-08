@@ -165,7 +165,9 @@ class TestSimulationBatch:
         assert_equal(self.batch.options.output_file, "iter_{0}.testout")
         assert_equal(self.batch.options.file_dump, True)
         assert_equal(self.batch.options.stats_file, "results.testout")
-        assert_equal(self.batch.options.pool_size, 'autodetect')
+        ## pp stuff
+        #assert_equal(self.batch.options.pool_size, 'autodetect')
+        assert self.batch.options.pool_size is None, "Pool size is not None"
         assert_equal(self.batch.options.quiet, False)
 
         assert_equal(self.batch.data['test'], True)

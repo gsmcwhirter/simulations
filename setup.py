@@ -7,7 +7,7 @@ from setuptools import setup
 
 setup(
     name='simulations',
-    version='0.5.2',
+    version='0.6.0',
     author='Gregory McWhirter',
     author_email='gmcwhirt@uci.edu',
     description='A framework for evolutionary game theory simulations',
@@ -23,7 +23,7 @@ setup(
     },
     install_requires=[
         'numpy>=1.5',
-        'pp'
+        #'pp'
     ],
     tests_require=[
         'nose>=1.0'

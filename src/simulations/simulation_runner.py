@@ -23,12 +23,13 @@ Functions:
 
 import cPickle
 import os
-import pp
+import multiprocessing as mp
 import sys
 
 from simulations.base import Base
 from simulations.base import withoptions
-from simulations.utils.fake_server import Server as FakeServer
+## pp stuff
+#from simulations.utils.fake_server import Server as FakeServer
 from simulations.utils.functions import random_string
 
 
@@ -129,15 +130,16 @@ class SimulationRunner(Base):
         else:
             option_values = None
 
-        if 'pp_modules' in kwdargs:
-            pp_modules = kwdargs['pp_modules']
-        else:
-            pp_modules = ()
-
-        if 'pp_deps' in kwdargs:
-            pp_deps = kwdargs['pp_deps']
-        else:
-            pp_deps = ()
+        ## pp stuff
+        #if 'pp_modules' in kwdargs:
+        #    pp_modules = kwdargs['pp_modules']
+        #else:
+        #    pp_modules = ()
+        #
+        #if 'pp_deps' in kwdargs:
+        #    pp_deps = kwdargs['pp_deps']
+        #else:
+        #    pp_deps = ()
 
         (self.options, self.args) = self.oparser.parse_args(
                                         args=option_args,
@@ -157,19 +159,22 @@ class SimulationRunner(Base):
 
         stats = open(output_base.format(self.options.stats_file), "wb")
 
-        serverlist = ()
+        ##pp stuff
+        #serverlist = ()
+        #
+        #if self.options.cluster_string:
+        #    serverlist = tuple(self.options.cluster_string.split(","))
+        #
+        #if len(serverlist) > 1 or self.options.pool_size > 1:
+        #    pool = pp.Server(self.options.pool_size,
+        #                        ppservers=serverlist,
+        #                        secret=self.options.cluster_secret)
+        #else:
+        #    pool = FakeServer(self.options.pool_size,
+        #                              ppservers=serverlist,
+        #                              secret=self.options.cluster_secret)
 
-        if self.options.cluster_string:
-            serverlist = tuple(self.options.cluster_string.split(","))
-
-        if len(serverlist) > 1 or self.options.pool_size > 1:
-            pool = pp.Server(self.options.pool_size,
-                                ppservers=serverlist,
-                                secret=self.options.cluster_secret)
-        else:
-            pool = FakeServer(self.options.pool_size,
-                                      ppservers=serverlist,
-                                      secret=self.options.cluster_secret)
+        pool = mp.Pool(self.options.pool_size)
 
         self.emit('pool started', self, pool)
 
@@ -214,19 +219,27 @@ class SimulationRunner(Base):
             print >> stats, cPickle.dumps(self.options)
             print >> stats
 
-            job_template = pp.Template(pool, run_simulation,
-                                             callback=finish_run,
-                                             callbackargs=(self, stats),
-                                             depfuncs=pp_deps,
-                                             modules=pp_modules,
-                                             group=self.identifier)
+            ## pp stuff
+            #job_template = pp.Template(pool, run_simulation,
+            #                                 callback=finish_run,
+            #                                 callbackargs=(self, stats),
+            #                                 depfuncs=pp_deps,
+            #                                 modules=pp_modules,
+            #                                 group=self.identifier)
+            #
+            #for task in tasks:
+            #    job_template.submit(self._simulation_class(*task))
+            #
+            #pool.wait(self.identifier)
 
-            for task in tasks:
-                job_template.submit(self._simulation_class(*task))
+            taskiter = (self._simulation_class(*task) for task in tasks)
+            for result in pool.imap_unordered(run_simulation, taskiter):
+                finish_run(self, stats, result)
 
-            pool.wait(self.identifier)
         except KeyboardInterrupt:
-            pool.destroy()
+            ## pp stuff
+            #pool.destroy()
+            pool.terminate()
             print "caught KeyboardInterrupt"
             sys.exit(1)
 
@@ -297,9 +310,11 @@ class SimulationRunner(Base):
         if not self.options.dup or self.options.dup <= 0:
             self.oparser.error("Number of duplications must be positive")
 
-        if self.options.pool_size is None:
-            self.options.pool_size = 'autodetect'
-        elif self.options.pool_size < 0:
+        ## pp stuff
+        #if self.options.pool_size is None:
+        #    self.options.pool_size = 'autodetect'
+        #elif self.options.pool_size < 0:
+        if self.options.pool_size is not None and self.options.pool_size < 0:
             self.oparser.error("Pool size must be non-negative")
 
     def _add_default_listeners(self):
@@ -374,7 +389,9 @@ def default_pool_handler(this, pool, out=None):
         out = sys.stdout
 
     if not this.options.quiet:
-        print >> out, "Pool Started: {0} workers".format(pool.get_ncpus())
+        ## pp stuff
+        #print >> out, "Pool Started: {0} workers".format(pool.get_ncpus())
+        print >> out, "Pool Started: {0} workers".format(pool._processes)
 
 
 def default_start_handler(this, out=None):
