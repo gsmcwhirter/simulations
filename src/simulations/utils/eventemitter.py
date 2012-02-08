@@ -62,6 +62,7 @@ class EventEmitter(object):
         """
 
         self._map = collections.defaultdict(list)
+        self._oncemap = collections.defaultdict(list)
         self._max_listeners = 10
 
     def set_max_listeners(self, max_listeners):
@@ -123,15 +124,10 @@ class EventEmitter(object):
 
         """
 
-        def handler(*args, **kwargs):
-            """ Runs the listener and then remove it from the list
+        self.add_listener(event, listener)
+        self._oncemap[event].append(listener)
 
-            """
-
-            listener(*args, **kwargs)
-            self.remove_listener(event, handler)
-
-        return self.add_listener(event, handler)
+        return self
 
     def remove_listener(self, event, listener=None):
         """ Remove a listener from an event
@@ -195,7 +191,12 @@ class EventEmitter(object):
 
         """
 
-        for subscriber in self._map[event][:]:
-            subscriber(*args, **kwargs)
+        for listener in self._map[event][:]:
+            listener(*args, **kwargs)
+
+        for listener in self._oncemap[event]:
+            self.remove_listener(event, listener)
+
+        self._oncemap[event] = []
 
         return self
