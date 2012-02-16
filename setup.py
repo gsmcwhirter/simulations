@@ -8,7 +8,7 @@ from setuptools import Extension
 
 setup(
     name='simulations',
-    version='0.7.2',
+    version='0.7.3',
     author='Gregory McWhirter',
     author_email='gmcwhirt@uci.edu',
     description='A framework for evolutionary game theory simulations',
