@@ -336,10 +336,9 @@ class TestDiscreteReplicatorThreeway:
 
     def test_run2(self):
         (gen_ct, initial_pop, final_pop, custom_data) = self.sim.run()
-        assert (self.sim._pop_equals(final_pop, (0., 1.)),
-               "Final population was unexpected: {0} from {1} -> {2}".format(final_pop,
+        assert self.sim._pop_equals(final_pop, (0., 1.)), "Final population was unexpected: {0} from {1} -> {2}".format(final_pop,
                                                                              initial_pop,
-                                                                             self.sim._step_generation(initial_pop)))
+                                                                             self.sim._step_generation(initial_pop))
         assert gen_ct >= 1
         assert_equal(len(initial_pop), len(self.sim.types))
 
