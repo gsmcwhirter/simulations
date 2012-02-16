@@ -14,11 +14,18 @@ Functions:
 """
 
 import itertools
-import math
+import numpy as np
 import numpy.random as rand
-import operator
+import simulations.dynamics.replicator_fastfuncs as fastfuncs
 
 from simulations.dynamics.discrete_replicator import DiscreteReplicatorDynamics
+
+
+def _create_caches(this, *args):
+    this._profiles_cache = fastfuncs.generate_profiles(np.array([np.int(len(i))
+                                                        for i in this.types]))
+    this._payoffs_cache = np.array([np.array(this._profile_payoffs(c), dtype=np.float64)
+                                                for c in this._profiles_cache])
 
 
 class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
@@ -67,6 +74,11 @@ class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
 
         super(NPopDiscreteReplicatorDynamics, self).__init__(*args, **kwdargs)
 
+        self._profiles_cache = None
+        self._payoffs_cache = None
+
+        self.on('initial set', _create_caches)
+
     def _add_default_listeners(self):
         """ Sets up default event listeners for various events
 
@@ -99,16 +111,30 @@ class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
         """
         rand.seed()
 
-        return tuple([tuple(rand.dirichlet([1] * len(self.types[i])))
+        samples = np.array([rand.dirichlet([1] * len(self.types[i]))
                         for i in xrange(len(self.types))])
+
+        type_cts = [len(i) for i in self.types]
+        max_type_ct = max(type_cts)
+
+        initpop = np.zeros([len(self.types), max_type_ct], dtype=np.float64)
+
+        for i, sample in enumerate(samples):
+            initpop[i, :type_cts[i]] = samples[i]
+
+        return initpop
 
     def _null_population(self):
         """ Generates a population that will not be equal to any initial population
 
         """
 
-        return tuple([tuple([0.] * len(self.types[k]))
-                       for k in xrange(len(self.types))])
+        type_cts = [len(i) for i in self.types]
+        max_type_ct = max(type_cts)
+
+        initpop = np.zeros([max_type_ct] * len(self.types), dtype=np.float64)
+
+        return initpop
 
     def _indiv_pop_equals(self, last, this):
         """ Determine if two populations of the same type are equal or not,
@@ -123,7 +149,7 @@ class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
               the other population
 
         """
-        return not any(abs(i - j) >= self.effective_zero
+        return not any((abs(i - j) >= self.effective_zero).any()
                         for i, j in itertools.izip(last, this))
 
     def _pop_equals(self, last, this):
@@ -139,6 +165,7 @@ class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
               the other list of populations
 
         """
+
         return all(self._indiv_pop_equals(i, j)
                     for i, j in itertools.izip(last, this))
 
@@ -154,41 +181,18 @@ class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
         # x_i(t+1) = (a + u(e^i, x(t)))*x_i(t) / (a + u(x(t), x(t)))
         # a is background (lifetime) birthrate
 
-        payoffs = [None] * len(pop)
-        avg_payoffs = [None] * len(pop)
-        num_types = [len(self.types[k]) for k in xrange(len(pop))]
+        if self._profiles_cache is None or self._payoffs_cache is None:
+            _create_caches(self)
 
-        for k in xrange(len(pop)):
-            payoffs[k] = [
-                math.fsum(
-                    float(self._interaction(k, profile)) *
-                            float(reduce(operator.mul, [pop[j][profile[j]]
-                                for j in xrange(len(profile)) if j != k], 1.))
-                    for profile in itertools.product(
-                        *([xrange(j)
-                            for j in num_types[:k]] + [[i]] + [xrange(j)
-                                for j in num_types[k + 1:]])
-                    ))
-                for i in xrange(num_types[k])
-            ]
-
-            avg_payoffs[k] = math.fsum(payoffs[k][i] * float(pop[k][i])
-                                        for i in xrange(num_types[k]))
-
-        new_pop = [
-            tuple([
-                float(pop[k][i]) *
-                (float(self.background_rate + payoffs[k][i])
-                    / float(self.background_rate + avg_payoffs[k]))
-                for i in xrange(num_types[k])
-            ])
-            for k in xrange(len(pop))
-        ]
-
-        return tuple(new_pop)
+        return fastfuncs.n_dimensional_step(pop.flatten(),
+                                            self._profiles_cache,
+                                            self._payoffs_cache,
+                                            np.array([len(i) for i in self.types]),
+                                            np.float64(self.background_rate))
 
     def _interaction(self, my_place, profile):
         """ You should implement this method.
+        DEPRECATED -- use :py:meth:`~NPopDiscreteReplicatorDynamics._profile_payoffs` instead
 
         Parameters:
 
@@ -200,7 +204,19 @@ class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
 
         """
 
-        return 1
+        return self._profile_payoffs(profile)[my_place]
+
+    def _profile_payoffs(self, profile):
+        """ You should implement this method
+
+        Parameters:
+
+            profile
+              the strategy profile that is being played (tuple of integers)
+
+        """
+
+        return [1, 1]
 
 
 def stable_state_handler(this, genct, thisgen, lastgen, firstgen):

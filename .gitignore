@@ -13,3 +13,5 @@ MANIFEST
 .coverage
 doc
 simulations.nja
+*.so
+testenv
