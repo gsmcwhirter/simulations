@@ -128,10 +128,10 @@ class DiscreteReplicatorDynamics(GenerationMachine):
 
         return []
 
-    def _run(self, *args):
-        retval = super(DiscreteReplicatorDynamics, self)._run(*args)
-
-        return (retval[0], tuple(retval[1].tolist()), tuple(retval[2].tolist()), retval[3])
+    #def _run(self, *args):
+    #    retval = super(DiscreteReplicatorDynamics, self)._run(*args)
+    #
+    #    return (retval[0], tuple(retval[1].tolist()), tuple(retval[2].tolist()), retval[3])
 
 
 def stable_state_handler(this, genct, thisgen, lastgen, firstgen):
@@ -155,6 +155,7 @@ def stable_state_handler(this, genct, thisgen, lastgen, firstgen):
           the initial population
 
     """
+
     print >> this.out, "=" * 72
     if this.force_stop:
         fstr = "Force stop! ({0} generations)"

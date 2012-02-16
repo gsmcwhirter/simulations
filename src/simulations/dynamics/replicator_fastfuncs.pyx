@@ -34,38 +34,44 @@ def one_dimensional_step(np.ndarray[DTYPE_t, ndim=1] pop,
 
     cdef np.ndarray[DTYPE2_t] profile
     cdef int i, j
+    cdef int num_profiles = profiles.shape[0]
+    cdef int profile_size = profiles[0].shape[0]
+    cdef float zero = 0.
     cdef DTYPE_t profile_prob, avg_payoff
     cdef np.ndarray[DTYPE_t] newpop, expected_contribution, profile_probs
     cdef np.ndarray[DTYPE_t] payoffs = np.zeros(types, dtype=DTYPE)
 
     #go over each possible profile of strategies
-    for i in xrange(profiles.shape[0]):
+    #for i in xrange(num_profiles)
+    for i from 0 <= i < num_profiles:
         profile = profiles[i]
         profile_prob = 1.
-        profile_probs = np.zeros(profile.shape[0], dtype=DTYPE)
+        profile_probs = np.zeros(profile_size, dtype=DTYPE)
 
         #calculate the probability of that profile being drawn
-        for j in xrange(profile.shape[0]):
+        #for j in xrange(profile.shape[0]):
+        for j from 0 <= j < profile_size:
             profile_probs[j] = pop[profile[j]]
         profile_prob = profile_probs.prod()
 
         #calculate the expected contribution for each of the profile slots
-        if profile_prob > 0.:
+        if profile_prob > zero:
             expected_contribution = (profile_payoffs[i] / profile_probs) * profile_prob
         else:
-            expected_contribution = profile_payoffs[i] * 0.
+            expected_contribution = profile_payoffs[i] * zero
 
         #add the expected contributions to the right type's payoff.
-        for j in xrange(profile.shape[0]):
-            payoffs[profile[j]] += expected_contribution[j]
+        #for j in xrange(profile.shape[0]):
+        for j from 0 <= j < profile_size:
+            payoffs[profile[j]] = payoffs[profile[j]] + expected_contribution[j]
 
-    payoffs /= np.float64(arity)
+    payoffs = payoffs / np.float64(arity)
 
     avg_payoff = np.dot(pop, payoffs)
 
     newpop = pop * (background_rate + payoffs) / (background_rate + avg_payoff)
 
-    return newpop.copy()
+    return newpop
 
 
 def n_dimensional_step(np.ndarray[DTYPE_t, ndim=1] pop,
@@ -77,37 +83,45 @@ def n_dimensional_step(np.ndarray[DTYPE_t, ndim=1] pop,
     cdef int n = types.max()
     cdef np.ndarray[DTYPE2_t] profile
     cdef int i, j
+    cdef int num_profiles = profiles.shape[0]
+    cdef int profile_size = profiles[0].shape[0]
+    cdef int num_pops = types.shape[0]
+    cdef float zero = 0.
     cdef DTYPE_t profile_prob
     cdef np.ndarray[DTYPE_t, ndim=2] newpop
     cdef np.ndarray[DTYPE_t] expected_contribution, profile_probs, avg_payoffs
-    cdef np.ndarray[DTYPE_t, ndim=2] payoffs = np.zeros((types.shape[0], types.max()), dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=2] payoffs = np.zeros((num_pops, types.max()), dtype=DTYPE)
 
     #go over each possible profile of strategies
-    for i in xrange(profiles.shape[0]):
+    #for i in xrange(profiles.shape[0]):
+    for i from 0 <= i < num_profiles:
         profile = profiles[i]
         profile_prob = 1.
-        profile_probs = np.zeros(profile.shape[0], dtype=DTYPE)
+        profile_probs = np.zeros(profile_size, dtype=DTYPE)
 
         #calculate the probability of that profile being drawn
-        for j in xrange(profile.shape[0]):
+        #for j in xrange(profile.shape[0]):
+        for j from 0 <= j < profile_size:
             profile_probs[j] = pop[j * n + profile[j]]
         profile_prob = profile_probs.prod()
 
         #calculate the expected contribution for each of the profile slots
-        if profile_prob > 0.:
+        if profile_prob > zero:
             expected_contribution = (profile_payoffs[i] / profile_probs) * profile_prob
         else:
-            expected_contribution = profile_payoffs[i] * 0.
+            expected_contribution = profile_payoffs[i] * zero
 
         #add the expected contributions to the right type's payoff.
-        for j in xrange(profile.shape[0]):
-            payoffs[j][profile[j]] += expected_contribution[j]
+        #for j in xrange(profile.shape[0]):
+        for j from 0 <= j < profile_size:
+            payoffs[j][profile[j]] = payoffs[j][profile[j]] + expected_contribution[j]
 
-    avg_payoffs = np.ones(types.shape[0], dtype=DTYPE)
-    newpop = np.zeros([types.shape[0], types.max()], dtype=DTYPE)
-    for i in xrange(types.shape[0]):
+    avg_payoffs = np.ones(num_pops, dtype=DTYPE)
+    newpop = np.zeros([num_pops, types.max()], dtype=DTYPE)
+    #for i in xrange(types.shape[0]):
+    for i from 0 <= i < num_pops:
         avg_payoffs[i] = np.dot(pop[(i * n):((i + 1) * n)], payoffs[i])
         newpop[i] = pop[(i * n):((i + 1) * n)] * (background_rate + payoffs[i]) / (background_rate + avg_payoffs[i])
 
-    return newpop.copy()
+    return newpop
 
