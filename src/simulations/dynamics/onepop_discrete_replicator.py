@@ -157,8 +157,12 @@ class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
 
         """
 
-        return not any((abs(i - j) >= self.effective_zero).any()
-                        for i, j in itertools.izip(last, this))
+        try:
+            return not any((abs(i - j) >= self.effective_zero).any()
+                            for i, j in itertools.izip(last, this))
+        except AttributeError:
+            return not any((abs(i - j) >= self.effective_zero)
+                            for i, j in itertools.izip(last, this))
 
     def _step_generation(self, pop):
         """ Step one population to the next generation

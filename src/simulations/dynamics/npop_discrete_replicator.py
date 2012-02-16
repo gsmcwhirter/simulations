@@ -149,8 +149,13 @@ class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
               the other population
 
         """
-        return not any((abs(i - j) >= self.effective_zero).any()
-                        for i, j in itertools.izip(last, this))
+
+        try:
+            return not any((abs(i - j) >= self.effective_zero).any()
+                            for i, j in itertools.izip(last, this))
+        except AttributeError:
+            return not any(abs(i - j) >= self.effective_zero
+                            for i, j in itertools.izip(last, this))
 
     def _pop_equals(self, last, this):
         """ Determine if two lists of populations are equal or not, accounting
