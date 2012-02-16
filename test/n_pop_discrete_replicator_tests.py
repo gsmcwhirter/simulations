@@ -1,4 +1,5 @@
 import simulations.dynamics.npop_discrete_replicator as dr
+import simulations.dynamics.replicator_fastfuncs as fastfuncs
 import simulations.simulation as simulation
 import math
 import numpy as np
@@ -94,9 +95,9 @@ class TestNPopDiscreteReplicatorDynamics:
 
     def test_interaction(self):
         try:
-            assert self.sim._interaction
-            assert_equal(self.sim._interaction(0, (0, 1)), 1)
-            assert_equal(self.sim._interaction(1, (0, 1)), 1)
+            assert self.sim._profile_payoffs
+            assert_equal(self.sim._profile_payoffs((0, 1))[0], 1)
+            assert_equal(self.sim._profile_payoffs((0, 1))[1], 1)
         except AttributeError:
             assert False, "_interaction is not defined"
         except TypeError:
@@ -110,13 +111,13 @@ class TestNPopDiscreteReplicatorDynamics:
             assert False, "_effective_zero is not defined"
 
     def test_pop_equals(self):
-        try:
-            assert self.sim._pop_equals
-            assert self.sim._pop_equals(np.array(((1., 0.), (1., 0.)), dtype=np.float64), np.array(((1., self.sim.effective_zero / 10.), (1., self.sim.effective_zero / 10.)), dtype=np.float64))
-        except AttributeError:
-            assert False, "_pop_equals is not defined"
-        except TypeError:
-            assert False, "_pop_equals not given the right parameters"
+        #try:
+        assert fastfuncs.pop_equals
+        assert fastfuncs.pop_equals(np.array(((1., 0.), (1., 0.)), dtype=np.float64), np.array(((1., self.sim.effective_zero / 10.), (1., self.sim.effective_zero / 10.)), dtype=np.float64), self.sim.effective_zero)
+        #except AttributeError:
+        #    assert False, "_pop_equals is not defined"
+        #except TypeError:
+        #    assert False, "_pop_equals not given the right parameters"
 
     def test_types(self):
         try:
@@ -132,14 +133,15 @@ class TestNPopDiscreteReplicatorDynamics:
             assert False, "_background_rate is not defined"
 
     def test_step_generation(self):
-        try:
-            assert self.sim._step_generation
-            assert (self.sim._step_generation(np.array(((.5, .5), (.5, .5)))) ==\
-                    np.array(((.5, .5), (.5, .5)))).all(), "Generation didn't move right"
-            assert (self.sim._step_generation(np.array(((0., 1.), (0., 1.)))) ==\
-                    np.array(((0., 1.), (0., 1.)))).all(), "Generation didn't move right"
-        except AttributeError:
-            assert False, "_step_generation is not defined"
+        #try:
+        assert self.sim._step_generation
+        print self.sim._step_generation(np.array(((.5, .5), (.5, .5))))
+        assert (self.sim._step_generation(np.array(((.5, .5), (.5, .5))))[1:] ==\
+                np.array(((.5, .5), (.5, .5)))).all(), "Generation didn't move right"
+        assert (self.sim._step_generation(np.array(((0., 1.), (0., 1.))))[1:] ==\
+                np.array(((0., 1.), (0., 1.)))).all(), "Generation didn't move right"
+        #except AttributeError:
+        #    assert False, "_step_generation is not defined"
         #except TypeError:
         #    assert False, "_step_generation not given the right parameters"
 
@@ -178,23 +180,23 @@ class TestNPopDiscreteReplicatorInstance:
         pass
 
     def test_interaction(self):
-        assert_equal(self.sim._interaction(0,(0,0)), 3)
-        assert_equal(self.sim._interaction(0,(0,1)), 0)
-        assert_equal(self.sim._interaction(0,(1,0)), 4)
-        assert_equal(self.sim._interaction(0,(1,1)), 1)
+        assert_equal(self.sim._profile_payoffs((0,0))[0], 3)
+        assert_equal(self.sim._profile_payoffs((0,1))[0], 0)
+        assert_equal(self.sim._profile_payoffs((1,0))[0], 4)
+        assert_equal(self.sim._profile_payoffs((1,1))[0], 1)
 
-        assert_equal(self.sim._interaction(1,(0,0)), 3)
-        assert_equal(self.sim._interaction(1,(0,1)), 4)
-        assert_equal(self.sim._interaction(1,(1,0)), 0)
-        assert_equal(self.sim._interaction(1,(1,1)), 1)
+        assert_equal(self.sim._profile_payoffs((0,0))[1], 3)
+        assert_equal(self.sim._profile_payoffs((0,1))[1], 4)
+        assert_equal(self.sim._profile_payoffs((1,0))[1], 0)
+        assert_equal(self.sim._profile_payoffs((1,1))[1], 1)
 
     def test_step_generation(self):
-        assert (self.sim._step_generation(np.array(((.5, .5),(.5,.5)), dtype=np.float64)) == np.array(((.375, .625), (.375, .625)), dtype=np.float64)).all(), "Generation didn't move right"
-        assert (self.sim._step_generation(np.array(((0., 1.),(0.,1.)))) == np.array(((0., 1.),(0., 1.)))).all(), "Generation didn't move right"
+        assert (self.sim._step_generation(np.array(((.5, .5),(.5,.5)), dtype=np.float64))[1:] == np.array(((.375, .625), (.375, .625)), dtype=np.float64)).all(), "Generation didn't move right"
+        assert (self.sim._step_generation(np.array(((0., 1.),(0.,1.))))[1:] == np.array(((0., 1.),(0., 1.)))).all(), "Generation didn't move right"
 
     def test_run(self):
         (gen_ct, initial_pop, final_pop, custom_data) = self.sim.run()
-        assert self.sim._pop_equals(final_pop, ((0., 1.), (0., 1.))), "Final population was instead {0}".format(final_pop)
+        assert fastfuncs.pop_equals(final_pop, np.array(((0., 1.), (0., 1.))), self.sim.effective_zero), "Final population was instead {0}".format(final_pop)
         assert gen_ct >= 1
         assert_equal(len(initial_pop), len(self.sim.types))
         assert custom_data is None, "Custom data got set somehow"
@@ -209,7 +211,7 @@ class TestNPopDiscreteReplicatorInstance2:
 
     def test_run(self):
         (gen_ct, initial_pop, final_pop, custom_data) = self.sim.run()
-        assert self.sim._pop_equals(final_pop, ((0., 1.), (0., 1.))), "Final population was instead {0}".format(final_pop)
+        assert fastfuncs.pop_equals(final_pop, np.array(((0., 1.), (0., 1.))), self.sim.effective_zero), "Final population was instead {0}".format(final_pop)
         assert gen_ct >= 1
         assert_equal(len(initial_pop), len(self.sim.types))
         assert_equal(self.sim.result_data, "test")
@@ -225,7 +227,7 @@ class TestNPopDiscreteReplicatorInstance3:
 
     def test_run(self):
         (gen_ct, initial_pop, final_pop, custom_data) = self.sim.run()
-        assert not self.sim._pop_equals(final_pop, np.array(((0., 1.), (0., 1.)))), "Final population was still {0}".format(final_pop)
+        assert not fastfuncs.pop_equals(final_pop, np.array(((0., 1.), (0., 1.))), self.sim.effective_zero), "Final population was still {0}".format(final_pop)
         assert_equal(gen_ct, 1)
         assert_equal(len(initial_pop), len(self.sim.types))
         assert_equal(self.sim.result_data, "test2")
@@ -243,7 +245,7 @@ class TestOddGameSim:
 
     def test_run(self):
         (gen_ct, initial_pop, final_pop, custom_data) = self.sim.run()
-        assert not self.sim._pop_equals(final_pop, np.array(((0., 1.), (0., 1.), (0., 0., 1.)))), "Final population was {0}".format(final_pop)
+        assert not fastfuncs.pop_equals(final_pop, np.array(((0., 1., 0.), (0., 1., 0.), (0., 0., 1.))), self.sim.effective_zero), "Final population was {0}".format(final_pop)
         assert gen_ct > 1
         assert_equal(len(initial_pop), len(self.sim.types))
         assert_equal(self.sim.force_stop, False)
