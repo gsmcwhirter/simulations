@@ -13,19 +13,11 @@ Functions:
 
 """
 
-import itertools
 import numpy as np
 import numpy.random as rand
 import simulations.dynamics.replicator_fastfuncs as fastfuncs
 
 from simulations.dynamics.discrete_replicator import DiscreteReplicatorDynamics
-
-
-def _create_caches(this, *args):
-    this._profiles_cache = fastfuncs.generate_profiles(np.array([np.int(len(i))
-                                                        for i in this.types]))
-    this._payoffs_cache = np.array([np.array(this._profile_payoffs(c), dtype=np.float64)
-                                                for c in this._profiles_cache])
 
 
 class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
@@ -47,7 +39,7 @@ class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
 
     Methods to Implement:
 
-        :py:meth:`~NPopDiscreteReplicatorDynamics._interaction`
+        :py:meth:`~NPopDiscreteReplicatorDynamics._profile_payoffs`
           Returns the payoff for a type given a strategy profile
 
     Events:
@@ -74,10 +66,7 @@ class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
 
         super(NPopDiscreteReplicatorDynamics, self).__init__(*args, **kwdargs)
 
-        self._profiles_cache = None
-        self._payoffs_cache = None
-
-        self.on('initial set', _create_caches)
+        self._one_or_many = self.TYPE_MANY
 
     def _add_default_listeners(self):
         """ Sets up default event listeners for various events
@@ -136,81 +125,6 @@ class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
 
         return initpop
 
-    def _indiv_pop_equals(self, last, this):
-        """ Determine if two populations of the same type are equal or not,
-            accounting for floating point issues
-
-        Parameters:
-
-            last
-              one of the populations
-
-            this
-              the other population
-
-        """
-
-        try:
-            return not any((abs(i - j) >= self.effective_zero).any()
-                            for i, j in itertools.izip(last, this))
-        except AttributeError:
-            return not any(abs(i - j) >= self.effective_zero
-                            for i, j in itertools.izip(last, this))
-
-    def _pop_equals(self, last, this):
-        """ Determine if two lists of populations are equal or not, accounting
-            for floating point issues
-
-        Parameters:
-
-            last
-              one of the lists of populations
-
-            this
-              the other list of populations
-
-        """
-
-        return all(self._indiv_pop_equals(i, j)
-                    for i, j in itertools.izip(last, this))
-
-    def _step_generation(self, pop):
-        """ Step one list of populations to the next generation
-
-        Parameters:
-
-            pop
-              The list of populations to send to the next generation
-
-        """
-        # x_i(t+1) = (a + u(e^i, x(t)))*x_i(t) / (a + u(x(t), x(t)))
-        # a is background (lifetime) birthrate
-
-        if self._profiles_cache is None or self._payoffs_cache is None:
-            _create_caches(self)
-
-        return fastfuncs.n_dimensional_step(pop.flatten(),
-                                            self._profiles_cache,
-                                            self._payoffs_cache,
-                                            np.array([len(i) for i in self.types]),
-                                            np.float64(self.background_rate))
-
-    def _interaction(self, my_place, profile):
-        """ You should implement this method.
-        DEPRECATED -- use :py:meth:`~NPopDiscreteReplicatorDynamics._profile_payoffs` instead
-
-        Parameters:
-
-            my_place
-              which place of the types the payoff is being calculated for
-
-            profile
-              the profile of strategies being played (tuple of integers)
-
-        """
-
-        return self._profile_payoffs(profile)[my_place]
-
     def _profile_payoffs(self, profile):
         """ You should implement this method
 
@@ -222,6 +136,12 @@ class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
         """
 
         return [1, 1]
+
+    def _create_caches(self):
+        self._profiles_cache = fastfuncs.generate_profiles(np.array([np.int(len(i))
+                                                            for i in self.types]))
+        self._payoffs_cache = np.array([np.array(self._profile_payoffs(c), dtype=np.float64)
+                                                    for c in self._profiles_cache])
 
 
 def stable_state_handler(this, genct, thisgen, lastgen, firstgen):

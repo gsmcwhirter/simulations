@@ -12,18 +12,11 @@ Functions:
 
 """
 
-import itertools
 import numpy as np
 import numpy.random as rand
 import simulations.dynamics.replicator_fastfuncs as fastfuncs
 
 from simulations.dynamics.discrete_replicator import DiscreteReplicatorDynamics
-
-
-def _create_caches(this, *args):
-    this._profiles_cache = fastfuncs.generate_profiles(np.repeat(np.int(len(this.types)), this.interaction_arity))
-    this._payoffs_cache = np.array([np.array(this._profile_payoffs(c), dtype=np.float64)
-                                                for c in this._profiles_cache])
 
 
 class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
@@ -43,12 +36,11 @@ class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
           dimensionality, defaults to the return value of :py:meth:`~OnePopDiscreteReplicatorDynamics._default_types`)
 
         background_rate
-          The natural rate of reproduction (parameter in the dynamics,
-          default 0.)
+          The natural rate of reproduction (parameter in the dynamics, default 0.)
 
     Methods to Implement:
 
-        :py:meth:`~OnePopDiscreteReplicatorDynamics._interaction`
+        :py:meth:`~OnePopDiscreteReplicatorDynamics._profile_payoffs`
           Returns the payoff for a type given a strategy profile
 
     Events:
@@ -98,10 +90,7 @@ class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
         else:
             self.interaction_arity = 2
 
-        self._profiles_cache = None
-        self._payoffs_cache = None
-
-        self.on('initial set', _create_caches)
+        self._one_or_many = self.TYPE_ONE
 
     def _add_default_listeners(self):
         """ Sets up default event listeners
@@ -143,65 +132,6 @@ class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
 
         return np.array([0.] * len(self.types), dtype=np.float64)
 
-    def _pop_equals(self, last, this):
-        """ Determine if two populations are equal, accounting for floating
-            point issues
-
-        Parameters:
-
-            last
-              one of the populations
-
-            this
-              the other population
-
-        """
-
-        try:
-            return not any((abs(i - j) >= self.effective_zero).any()
-                            for i, j in itertools.izip(last, this))
-        except AttributeError:
-            return not any((abs(i - j) >= self.effective_zero)
-                            for i, j in itertools.izip(last, this))
-
-    def _step_generation(self, pop):
-        """ Step one population to the next generation
-
-        Parameters:
-
-            pop
-              The population to send to the next generation
-
-        """
-        # x_i(t+1) = (a + u(e^i, x(t)))*x_i(t) / (a + u(x(t), x(t)))
-        # a is background (lifetime) birthrate
-
-        if self._profiles_cache is None or self._payoffs_cache is None:
-            _create_caches(self)
-
-        return fastfuncs.one_dimensional_step(pop,
-                                              self._profiles_cache,
-                                              self._payoffs_cache,
-                                              np.int(len(self.types)),
-                                              np.int(self.interaction_arity),
-                                              np.float64(self.background_rate))
-
-    def _interaction(self, my_place, profile):
-        """ You should implement this method.
-        DEPRECATED - use :py:meth:`~OnePopDiscreteReplicatorDynamics._payoffs` instead
-
-        Parameters:
-
-            my_place
-              which place of the types the payoff is being calculated for
-
-            profile
-              the strategy profile that is being played (tuple of integers)
-
-        """
-
-        return self._profile_payoffs(profile)[my_place]
-
     def _profile_payoffs(self, profile):
         """ You should implement this method
 
@@ -213,6 +143,11 @@ class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
         """
 
         return [1, 1]
+
+    def _create_caches(self):
+        self._profiles_cache = fastfuncs.generate_profiles(np.repeat(np.int(len(self.types)), self.interaction_arity))
+        self._payoffs_cache = np.array([np.array(self._profile_payoffs(c), dtype=np.float64)
+                                                    for c in self._profiles_cache])
 
 
 def stable_state_handler(this, genct, thisgen, lastgen, firstgen):

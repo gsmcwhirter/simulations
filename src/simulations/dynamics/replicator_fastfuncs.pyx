@@ -8,7 +8,8 @@ DTYPE2 = np.int
 ctypedef np.int_t DTYPE2_t
 
 
-def generate_profiles(np.ndarray[DTYPE2_t] types, np.ndarray[DTYPE2_t, ndim=2] out=None):
+def generate_profiles(np.ndarray[DTYPE2_t] types,
+                      np.ndarray[DTYPE2_t, ndim=2] out=None):
     cdef int n = types.prod()
     cdef int plength = types.shape[0]
     cdef int m = n / types[0]
@@ -25,17 +26,47 @@ def generate_profiles(np.ndarray[DTYPE2_t] types, np.ndarray[DTYPE2_t, ndim=2] o
     return out
 
 
-def one_dimensional_step(np.ndarray[DTYPE_t, ndim=1] pop,
-                         np.ndarray[DTYPE2_t, ndim=2] profiles,
-                         np.ndarray[DTYPE_t, ndim=2] profile_payoffs,
-                         DTYPE2_t types,
-                         DTYPE2_t arity,
-                         DTYPE_t background_rate):
+def pop_equals(np.ndarray newpop,
+               np.ndarray prevpop,
+               DTYPE_t effective_zero):
+    if newpop.ndim == 1:
+        return one_pop_equals(newpop, prevpop, effective_zero)
+    elif newpop.ndim == 2:
+        return n_pop_equals(newpop, prevpop, effective_zero)
+    else:
+        raise ValueError("Can only handle 1 or 2 dimensions")
+
+
+cpdef int n_pop_equals(np.ndarray[DTYPE_t, ndim=2] newpop,
+                       np.ndarray[DTYPE_t, ndim=2] prevpop,
+                       DTYPE_t effective_zero):
+    if (np.absolute(newpop - prevpop) > effective_zero).any():
+        return 0
+    else:
+        return 1
+
+
+cpdef int one_pop_equals(np.ndarray[DTYPE_t, ndim=1] newpop,
+                         np.ndarray[DTYPE_t, ndim=1] prevpop,
+                         DTYPE_t effective_zero):
+    if (np.absolute(newpop - prevpop) > effective_zero).any():
+        return 0
+    else:
+        return 1
+
+
+cpdef np.ndarray[DTYPE_t, ndim=1] one_dimensional_step(np.ndarray[DTYPE_t, ndim=1] pop,
+                                                       np.ndarray[DTYPE2_t, ndim=2] profiles,
+                                                       np.ndarray[DTYPE_t, ndim=2] profile_payoffs,
+                                                       DTYPE2_t types,
+                                                       DTYPE2_t arity,
+                                                       DTYPE_t background_rate,
+                                                       DTYPE_t effective_zero,
+                                                       DTYPE2_t num_profiles,
+                                                       DTYPE2_t profile_size):
 
     cdef np.ndarray[DTYPE2_t] profile
     cdef int i, j
-    cdef int num_profiles = profiles.shape[0]
-    cdef int profile_size = profiles[0].shape[0]
     cdef float zero = 0.
     cdef DTYPE_t profile_prob, avg_payoff
     cdef np.ndarray[DTYPE_t] newpop, expected_contribution, profile_probs
@@ -71,21 +102,21 @@ def one_dimensional_step(np.ndarray[DTYPE_t, ndim=1] pop,
 
     newpop = pop * (background_rate + payoffs) / (background_rate + avg_payoff)
 
-    return newpop
+    return np.insert(newpop, 0, one_pop_equals(newpop, pop, effective_zero))
 
 
-def n_dimensional_step(np.ndarray[DTYPE_t, ndim=1] pop,
-                       np.ndarray[DTYPE2_t, ndim=2] profiles,
-                       np.ndarray[DTYPE_t, ndim=2] profile_payoffs,
-                       np.ndarray[DTYPE2_t, ndim=1] types,
-                       DTYPE_t background_rate):
+cpdef np.ndarray[DTYPE_t, ndim=2] n_dimensional_step(np.ndarray[DTYPE_t, ndim=2] pop,
+                                                     np.ndarray[DTYPE2_t, ndim=2] profiles,
+                                                     np.ndarray[DTYPE_t, ndim=2] profile_payoffs,
+                                                     np.ndarray[DTYPE2_t, ndim=1] types,
+                                                     DTYPE_t background_rate,
+                                                     DTYPE_t effective_zero,
+                                                     DTYPE2_t num_pops,
+                                                     DTYPE2_t num_profiles,
+                                                     DTYPE2_t profile_size):
 
-    cdef int n = types.max()
     cdef np.ndarray[DTYPE2_t] profile
     cdef int i, j
-    cdef int num_profiles = profiles.shape[0]
-    cdef int profile_size = profiles[0].shape[0]
-    cdef int num_pops = types.shape[0]
     cdef float zero = 0.
     cdef DTYPE_t profile_prob
     cdef np.ndarray[DTYPE_t, ndim=2] newpop
@@ -102,7 +133,7 @@ def n_dimensional_step(np.ndarray[DTYPE_t, ndim=1] pop,
         #calculate the probability of that profile being drawn
         #for j in xrange(profile.shape[0]):
         for j from 0 <= j < profile_size:
-            profile_probs[j] = pop[j * n + profile[j]]
+            profile_probs[j] = pop[j][profile[j]]
         profile_prob = profile_probs.prod()
 
         #calculate the expected contribution for each of the profile slots
@@ -120,8 +151,8 @@ def n_dimensional_step(np.ndarray[DTYPE_t, ndim=1] pop,
     newpop = np.zeros([num_pops, types.max()], dtype=DTYPE)
     #for i in xrange(types.shape[0]):
     for i from 0 <= i < num_pops:
-        avg_payoffs[i] = np.dot(pop[(i * n):((i + 1) * n)], payoffs[i])
-        newpop[i] = pop[(i * n):((i + 1) * n)] * (background_rate + payoffs[i]) / (background_rate + avg_payoffs[i])
+        avg_payoffs[i] = np.dot(pop[i], payoffs[i])
+        newpop[i] = pop[i] * (background_rate + payoffs[i]) / (background_rate + avg_payoffs[i])
 
-    return newpop
+    return np.vstack((np.repeat(n_pop_equals(newpop, pop, effective_zero), types.max()), newpop))
 
