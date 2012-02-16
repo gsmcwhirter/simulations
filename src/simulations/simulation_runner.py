@@ -243,7 +243,7 @@ class SimulationRunner(Base):
             #
             #pool.wait(self.identifier)
 
-            taskiter = (self._simulation_class(*task) for task in tasks)
+            taskiter = ([self._simulation_class] + task for task in tasks)
             for result in pool.imap_unordered(run_simulation, taskiter):
                 finish_run(self, stats, result)
 
@@ -354,11 +354,11 @@ def run_simulation(task):
 
     """
 
-    #klass = task.pop(0)
-    #sim = klass(*task)
-    #
-    #return sim.run()
-    return task.run()
+    klass = task.pop(0)
+    sim = klass(*task)
+
+    return sim.run()
+    #return task.run()
 
 
 def default_result_handler(this, result, out=None):

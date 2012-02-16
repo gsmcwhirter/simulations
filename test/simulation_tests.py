@@ -104,7 +104,7 @@ class TestSimulation:
 
     def test_delegation_method(self):
         self.sim.set_output_file(None)
-        assert_equal(simrunner.run_simulation(Sim(1, 2, None)), "runs")
+        assert_equal(simrunner.run_simulation([Sim, 1, 2, None]), "runs")
 
 class TestSimulationBatch:
 
