@@ -128,6 +128,11 @@ class DiscreteReplicatorDynamics(GenerationMachine):
 
         return []
 
+    def _run(self, *args):
+        retval = super(DiscreteReplicatorDynamics, self)._run(*args)
+
+        return (retval[0], tuple(retval[1].tolist()), tuple(retval[2].tolist()), retval[3])
+
 
 def stable_state_handler(this, genct, thisgen, lastgen, firstgen):
     """ Print out a report when a stable state is reached.

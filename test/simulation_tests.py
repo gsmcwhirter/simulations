@@ -190,7 +190,7 @@ class TestSimulationBatch:
             assert_equal(results_file.read(), should_be)
 
     def test_batch_go2(self):
-        args = ["-N", "6", "-P", "1", "-O", self.dir, "-S", "results.testout", "-Q", "--test", "-D"]
+        args = ["-N", "6", "-P", "2", "-O", self.dir, "-S", "results.testout", "-Q", "--test", "-D"]
         assert self.batch.go(option_args=args) is None
         assert_equal(self.batch.options.test, True)
         assert_equal(self.batch.options.dup, 6)
@@ -198,7 +198,7 @@ class TestSimulationBatch:
         assert_equal(self.batch.options.output_file, "duplication_{0}")
         assert_equal(self.batch.options.file_dump, False)
         assert_equal(self.batch.options.stats_file, "results.testout")
-        assert_equal(self.batch.options.pool_size, 1)
+        assert_equal(self.batch.options.pool_size, 2)
         assert_equal(self.batch.options.quiet, True)
 
         assert_equal(self.batch.data['test'], True)
