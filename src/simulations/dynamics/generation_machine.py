@@ -82,7 +82,7 @@ class GenerationMachine(Simulation):
         self.on('generation', generation_report_handler)
 
     def _random_population(self):
-        """ Generate a random population on the unit simplex of appropriate
+        """ Generate a random population of appropriate
             dimensionality (should implement)
 
         """

@@ -13,11 +13,17 @@ Functions:
 """
 
 import itertools
-import math
+import numpy as np
 import numpy.random as rand
-import operator
+import simulations.dynamics.replicator_fastfuncs as fastfuncs
 
 from simulations.dynamics.discrete_replicator import DiscreteReplicatorDynamics
+
+
+def _create_caches(this, *args):
+    this._profiles_cache = fastfuncs.generate_profiles(np.repeat(np.int(len(this.types)), this.interaction_arity))
+    this._payoffs_cache = np.array([np.array(this._profile_payoffs(c), dtype=np.float64)
+                                                for c in this._profiles_cache])
 
 
 class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
@@ -92,6 +98,11 @@ class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
         else:
             self.interaction_arity = 2
 
+        self._profiles_cache = None
+        self._payoffs_cache = None
+
+        self.on('initial set', _create_caches)
+
     def _add_default_listeners(self):
         """ Sets up default event listeners
 
@@ -122,7 +133,7 @@ class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
 
         rand.seed()
 
-        return tuple(rand.dirichlet([1] * len(self.types)))
+        return rand.dirichlet([1] * len(self.types))
 
     def _null_population(self):
         """ Generates a population guaranteed to compare falsely with a random
@@ -130,7 +141,7 @@ class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
 
         """
 
-        return tuple([0.] * len(self.types))
+        return np.array([0.] * len(self.types), dtype=np.float64)
 
     def _pop_equals(self, last, this):
         """ Determine if two populations are equal, accounting for floating
@@ -146,7 +157,7 @@ class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
 
         """
 
-        return not any(abs(i - j) > self.effective_zero
+        return not any((abs(i - j) >= self.effective_zero).any()
                         for i, j in itertools.izip(last, this))
 
     def _step_generation(self, pop):
@@ -161,39 +172,19 @@ class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
         # x_i(t+1) = (a + u(e^i, x(t)))*x_i(t) / (a + u(x(t), x(t)))
         # a is background (lifetime) birthrate
 
-        num_types = len(self.types)
+        if self._profiles_cache is None or self._payoffs_cache is None:
+            _create_caches(self)
 
-        payoffs = [
-            math.fsum(
-                math.fsum(
-                    float(self._interaction(place, profile)) *
-                    float(reduce(operator.mul, [pop[profile[prplace]]
-                        for prplace in xrange(len(profile))
-                        if prplace != place], 1.))
-                    for profile in itertools.product(
-                            *([xrange(num_types) for _ in xrange(place)] +
-                              [[typ]] +
-                              [xrange(num_types)
-                                  for _ in xrange(place + 1,
-                                                  self.interaction_arity)])
-                    ))
-                for place in xrange(self.interaction_arity)
-            ) / float(self.interaction_arity)
-            for typ in xrange(num_types)
-        ]
-
-        avg_payoff = math.fsum(payoffs[i] * float(pop[i])
-                                for i in xrange(num_types))
-
-        new_pop = [float(pop[i]) *
-                   ((float(self.background_rate) + float(payoffs[i]))
-                       / (float(self.background_rate) + avg_payoff))
-                   for i in xrange(num_types)]
-
-        return tuple(new_pop)
+        return fastfuncs.one_dimensional_step(pop,
+                                              self._profiles_cache,
+                                              self._payoffs_cache,
+                                              np.int(len(self.types)),
+                                              np.int(self.interaction_arity),
+                                              np.float64(self.background_rate))
 
     def _interaction(self, my_place, profile):
         """ You should implement this method.
+        DEPRECATED - use :py:meth:`~OnePopDiscreteReplicatorDynamics._payoffs` instead
 
         Parameters:
 
@@ -205,7 +196,19 @@ class OnePopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
 
         """
 
-        return 1
+        return self._profile_payoffs(profile)[my_place]
+
+    def _profile_payoffs(self, profile):
+        """ You should implement this method
+
+        Parameters:
+
+            profile
+              the strategy profile that is being played (tuple of integers)
+
+        """
+
+        return [1, 1]
 
 
 def stable_state_handler(this, genct, thisgen, lastgen, firstgen):

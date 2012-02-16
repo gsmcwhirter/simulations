@@ -150,7 +150,7 @@ class StatsParser(Base):
 
                 if count == 0:
                     if self.options.verbose:
-                        print "Delegating to _handle_result_options."
+                        print "Emitting 'result options'."
                     self.emit('result options',
                                 self,
                                 out,
@@ -158,7 +158,7 @@ class StatsParser(Base):
                              )
                 else:
                     if self.options.verbose:
-                        print "Delegating to _handle_result."
+                        print "Emitting 'result'."
                     self.emit('result',
                                 self,
                                 out,
