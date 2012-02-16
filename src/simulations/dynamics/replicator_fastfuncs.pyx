@@ -74,7 +74,7 @@ def n_dimensional_step(np.ndarray[DTYPE_t, ndim=1] pop,
                        np.ndarray[DTYPE2_t, ndim=1] types,
                        DTYPE_t background_rate):
 
-    cdef DTYPE2_t n = types.shape[0]
+    cdef int n = types.max()
     cdef np.ndarray[DTYPE2_t] profile
     cdef int i, j
     cdef DTYPE_t profile_prob
