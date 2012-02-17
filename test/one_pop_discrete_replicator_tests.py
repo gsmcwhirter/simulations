@@ -160,8 +160,8 @@ class TestDiscreteReplicatorDynamics:
     def test_step_generation(self):
         #try:
         assert self.sim._step_generation
-        assert (self.sim._step_generation(np.array((.5, .5), dtype=np.float64), 1)[1:] == np.array((.5, .5), dtype=np.float64)).all(), "Generation was not stationary"
-        assert (self.sim._step_generation(np.array((0., 1.), dtype=np.float64), 1)[1:] == np.array((0., 1.), dtype=np.float64)).all(), "Generation was not stationary"
+        assert (self.sim._step_generation(np.array((.5, .5), dtype=np.float64))[1:] == np.array((.5, .5), dtype=np.float64)).all(), "Generation was not stationary"
+        assert (self.sim._step_generation(np.array((0., 1.), dtype=np.float64))[1:] == np.array((0., 1.), dtype=np.float64)).all(), "Generation was not stationary"
         #except AttributeError:
         #    assert False, "_step_generation is not defined"
         #except TypeError:
@@ -220,8 +220,8 @@ class TestDiscreteReplicatorInstance:
         assert_equal(self.sim._profile_payoffs((1, 1))[1], 1)
 
     def test_step_generation(self):
-        assert (self.sim._step_generation(np.array((.5, .5), dtype=np.float64), 1)[1:] == np.array((.375, .625), dtype=np.float64)).all(), "Generation movement was not correct"
-        assert (self.sim._step_generation(np.array((0., 1.), dtype=np.float64), 1)[1:] == np.array((0., 1.), dtype=np.float64)).all(), "Generation movement was not correct"
+        assert (self.sim._step_generation(np.array((.5, .5), dtype=np.float64))[1:] == np.array((.375, .625), dtype=np.float64)).all(), "Generation movement was not correct"
+        assert (self.sim._step_generation(np.array((0., 1.), dtype=np.float64))[1:] == np.array((0., 1.), dtype=np.float64)).all(), "Generation movement was not correct"
 
     def test_run(self):
         (gen_ct, initial_pop, final_pop, custom_data) = self.sim.run()

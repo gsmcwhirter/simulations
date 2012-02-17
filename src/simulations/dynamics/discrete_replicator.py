@@ -28,16 +28,21 @@ def _create_caches(this, *args):
 
     this._create_caches()
     this._num_profiles = this._profiles_cache.shape[0]
+    this._sample_profile = this._profiles_cache[0]
     this._profile_size = this._profiles_cache.shape[1]
     this._background_rate = np.float64(this.background_rate)
     this._effective_zero = np.float64(this.effective_zero)
 
     if this._one_or_many == DiscreteReplicatorDynamics.TYPE_ONE:
-        this._num_types = np.int(len(this.types))
+        this._num_types = np.arange(len(this.types))
+        this._num_types_2 = np.arange(len(this.types) + 1)
         this._interaction_arity = np.int(this.interaction_arity)
     elif this._one_or_many == DiscreteReplicatorDynamics.TYPE_MANY:
-        this._num_types = np.array([len(i) for i in this.types])
-        this._num_pops = np.int(len(this.types))
+        #this._num_types = np.array([np.arange(len(i)) for i in this.types])
+        this._num_types = np.zeros([len(this.types), max(len(type) for type in this.types)], dtype=np.int)
+        this._num_types_2 = np.zeros([len(this.types) + 1, max(len(type) for type in this.types)], dtype=np.int)
+        #this._num_types_2 = np.array([np.arange(1)] + [np.arange(len(i)) for i in this.types])
+        this._num_pops = np.arange(len(this.types))
 
 
 class DiscreteReplicatorDynamics(Simulation):
@@ -144,9 +149,11 @@ class DiscreteReplicatorDynamics(Simulation):
         self._background_rate = None
         self._num_profiles = None
         self._num_types = None
+        self._num_types_2 = None
         self._profile_size = None
         self._interaction_arity = None
         self._num_pops = None
+        self._sample_profile = None
 
         self.on('initial set', _create_caches)
 
@@ -193,7 +200,7 @@ class DiscreteReplicatorDynamics(Simulation):
 
         return ()
 
-    def _step_generation(self, pop, one_or_many=None):
+    def _step_generation(self, pop):
         """ Step one population or list of populations to the next generation
 
         Parameters:
@@ -208,27 +215,26 @@ class DiscreteReplicatorDynamics(Simulation):
         if self._profiles_cache is None or self._payoffs_cache is None:
             _create_caches(self)
 
-        if self._one_or_many is None:
-            om = one_or_many
-        else:
-            om = self._one_or_many
-
-        if om == self.TYPE_ONE:
+        if self._one_or_many == self.TYPE_ONE:
             return fastfuncs.one_dimensional_step(pop,
                                                   self._profiles_cache,
+                                                  self._sample_profile,
                                                   self._payoffs_cache,
                                                   self._num_types,
+                                                  self._num_types_2,
                                                   self._interaction_arity,
                                                   self._background_rate,
                                                   self._effective_zero,
                                                   self._num_profiles,
                                                   self._profile_size)
 
-        if om == self.TYPE_MANY:
+        if self._one_or_many == self.TYPE_MANY:
             return fastfuncs.n_dimensional_step(pop,
                                                 self._profiles_cache,
+                                                self._sample_profile,
                                                 self._payoffs_cache,
                                                 self._num_types,
+                                                self._num_types_2,
                                                 self._background_rate,
                                                 self._effective_zero,
                                                 self._num_pops,
@@ -257,7 +263,7 @@ class DiscreteReplicatorDynamics(Simulation):
         last_equal = 0
         while last_equal != 1 and not self.force_stop:
             generation_count += 1
-            last_generation = this_generation
+            last_generation = this_generation.copy()
             tmp = self._step_generation(last_generation)
             last_equal = tmp[0:1][0]
             try:
@@ -265,7 +271,7 @@ class DiscreteReplicatorDynamics(Simulation):
             except IndexError:
                 pass
 
-            this_generation = tmp[1:]
+            this_generation = tmp[1:].copy()
 
             self.emit('generation',
                         self,
