@@ -100,8 +100,8 @@ class NPopDiscreteReplicatorDynamics(DiscreteReplicatorDynamics):
         """
         rand.seed()
 
-        samples = np.array([rand.dirichlet([1] * len(self.types[i]))
-                        for i in xrange(len(self.types))])
+        samples = [rand.dirichlet([1] * len(self.types[i]))
+                        for i in xrange(len(self.types))]
 
         type_cts = [len(i) for i in self.types]
         max_type_ct = max(type_cts)

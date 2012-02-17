@@ -38,10 +38,8 @@ def _create_caches(this, *args):
         this._num_types_2 = np.arange(len(this.types) + 1)
         this._interaction_arity = np.int(this.interaction_arity)
     elif this._one_or_many == DiscreteReplicatorDynamics.TYPE_MANY:
-        #this._num_types = np.array([np.arange(len(i)) for i in this.types])
         this._num_types = np.zeros([len(this.types), max(len(type) for type in this.types)], dtype=np.int)
         this._num_types_2 = np.zeros([len(this.types) + 1, max(len(type) for type in this.types)], dtype=np.int)
-        #this._num_types_2 = np.array([np.arange(1)] + [np.arange(len(i)) for i in this.types])
         this._num_pops = np.arange(len(this.types))
 
 
