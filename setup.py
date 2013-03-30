@@ -22,7 +22,7 @@ setup(
     ext_modules=[
         Extension("simulations.dynamics.replicator_fastfuncs",
                     sources=["src/simulations/dynamics/replicator_fastfuncs.c"],
-                    include_dirs=["/usr/share/pyshared/numpy/core/include/numpy/"])
+                    include_dirs=["/usr/share/pyshared/numpy/core/include/"])
     ],
     package_dir={
         '': 'src',
