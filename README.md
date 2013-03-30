@@ -1,6 +1,6 @@
 # simulations
 
-[![Build Status](https://travis-ci.org/gsmcwhirter/simulations.png?branch=master)](https://travis-ci.org/gsmcwhirter/simulations)
+[![Build Status](https://travis-ci.org/gsmcwhirter/simulations.png?branch=develop)](https://travis-ci.org/gsmcwhirter/simulations)
 
 This package serves as the base framework for simulating
 evolutionary game theoretic models and creating reports
