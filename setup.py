@@ -22,7 +22,10 @@ setup(
     ext_modules=[
         Extension("simulations.dynamics.replicator_fastfuncs",
                     sources=["src/simulations/dynamics/replicator_fastfuncs.c"],
-                    include_dirs=["/usr/lib/python2.7/dist-packages/numpy/core/include/", "/usr/lib/python2.6/dist-packages/numpy/core/include/"])
+                    include_dirs=["/usr/lib/python2.7/dist-packages/numpy/core/include/", 
+                                  "/usr/lib/python2.6/dist-packages/numpy/core/include/",
+                                  "/home/travis/virtualenv/python2.7/lib/python2.7/site-packages/numpy/core/include/",
+                                  "/home/travis/virtualenv/python2.6/lib/python2.6/site-packages/numpy/core/include/"])
     ],
     package_dir={
         '': 'src',
